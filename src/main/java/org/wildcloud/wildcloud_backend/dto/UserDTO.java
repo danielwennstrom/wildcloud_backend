@@ -16,7 +16,7 @@ public record UserDTO(
 
         String firstName,
         String lastName,
-        String phoneNumber,
+        Long phoneNumber,
 
         @NotBlank
         @NotNull @Email @Size(min = 2, max = 200)
