@@ -12,9 +12,10 @@ public interface UserService {
     List<UserDTO> findAll();
     UserDTO findById(Long id);
     UserDTO findByEmail(String email);
-    UserDTO findByPhoneNumber(String phoneNumber);
-    UserDTO createUser(UserRegistrationDTO userRegistrationDTO);
-    UserDTO updateUser(UserUpdateDTO userUpdateDTO);
+    UserDTO findByPhoneNumber(Long phoneNumber);
+    UserDTO createUser(String email, String firstName, String lastName, Long phoneNumber, String password, String cameraEmail);
+
+    UserDTO updateUser(String email, String firstName, String lastName, Long phoneNumber, String password, String cameraEmail);
     UserDTO addCameraToUser(Long userId, String cameraEmail);
     void deleteUser(Long id);
 

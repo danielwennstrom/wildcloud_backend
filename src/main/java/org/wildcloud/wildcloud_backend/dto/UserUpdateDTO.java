@@ -10,9 +10,10 @@ public class UserUpdateDTO extends UserRegistrationDTO{
             String cameraEmail,
             String firstName,
             String lastName,
-            String phoneNumber,
+            Long phoneNumber,
             String email,
             String password) {
-            super(cameraEmail, firstName, lastName, phoneNumber, email, password);
+            super(userId, cameraEmail, firstName, lastName, phoneNumber, email, password);
     }
+
 }

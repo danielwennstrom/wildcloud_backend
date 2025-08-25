@@ -10,12 +10,14 @@ import lombok.Builder;
 @Builder
 public class UserRegistrationDTO{
 
+    Long userId;
+
     @Email
     String cameraEmail;
 
     String firstName;
     String lastName;
-    String phoneNumber;
+    Long phoneNumber;
 
     @NotBlank
     @NotNull
