@@ -1,0 +1,88 @@
+@startuml
+package ImageUploadService {
+    ' sourceType = email, cloud, whatever
+    interface ImageUploadService {
+        + processUpload(String sourceType, Object inputData) : UploadResult
+        + registerProcessor(String sourceType, ImageProcessor processor)
+        + registerValidator(ImageValidator validator)
+    }
+    
+    /' The ApplicationEventPublisher executes registered @EventListener classes,
+       so we could have notifyUser, notifyTeamMembers hooks etc. in Service classes
+       StorageService uploads to Cloudflare R2,
+       MetadataService saves metadata such as the CDN URL
+    '/
+    class ImageUploadServiceImpl implements ImageUploadService {
+        - Map<String, ImageProcessor> processors;
+        - List<ImageValidator> validators;
+        - ApplicationEventPublisher eventPublisher
+        + uploadImage(ImageUploadData imageData) : UploadResult
+        - StorageService storageService
+        - MetadataService metadataService
+    }
+        
+    ImageUploadServiceImpl ||--o{ ImageProcessor
+    ImageUploadServiceImpl ||--o{ ImageValidator
+    ImageUploadServiceImpl ..> StorageService
+    ImageUploadServiceImpl ..> MetadataService
+    ImageUploadServiceImpl ..> ApplicationEventPublisher
+    
+    class StorageService {
+        + upload(byte[] buffer) : StorageResult
+    }
+    
+    ImageUploadData ..> StorageService
+    
+    class MetadataService {
+        + save(ImageEntity imageEntity) : ImageEntity
+    }
+    
+    MetadataService ..> ImageRepository
+    MetadataService ..> ImageEntity
+    ImageEntity *- ImageMetadata
+    ImageUploadData ..> ImageMetadata
+    
+    class ImageEntity {
+        - String userId
+        - String cameraId
+        - String filename
+        - String contentType
+        - LocalDateTime capturedAt
+        - String sourceType
+        - Map<String, Object> sourceMetadata
+        ...
+    }
+    
+    class ImageMetadata {
+        ...
+    }
+    
+    /' sourceMetadata could have metadata like which cloud service the image is from, etc.
+       Basically whatever we want
+    '/
+    class ImageUploadData {
+        - byte[] buffer
+        - String filename
+        - String userId
+        - String cameraId
+        - String contentType
+        - String sourceType
+        - Map<String, Object> sourceMetadata
+        - LocalDateTime capturedAt
+    }
+    
+    ' Strategy pattern (Manual upload, e-mail, cloud storage, whatever)
+    interface ImageProcessor {
+        + process(Object inputData) : ImageUploadData
+    }
+    
+    /' Chain of Responsibility pattern
+       The idea is to process the image data in a chain of validators,
+       for example to check file size, file type, etc.
+    '/
+    interface ImageValidator {
+        + validate(ImageUploadData imageData) : void throws ValidationException
+    }
+}
+
+@enduml
