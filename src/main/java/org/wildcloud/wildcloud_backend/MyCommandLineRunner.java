@@ -6,18 +6,16 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import org.wildcloud.wildcloud_backend.entity.UserInfo;
-import org.wildcloud.wildcloud_backend.repository.UserRepo;
-
-import java.util.SortedSet;
+import org.wildcloud.wildcloud_backend.repository.UserRepository;
 
 @Component
 public class MyCommandLineRunner implements CommandLineRunner {
 
     private static final Logger logger = LoggerFactory.getLogger(MyCommandLineRunner.class);
-    private final UserRepo userRepo;
+    private final UserRepository userRepository;
 
-    public MyCommandLineRunner(UserRepo userRepo) {
-        this.userRepo = userRepo;
+    public MyCommandLineRunner(UserRepository userRepository) {
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -33,8 +31,8 @@ public class MyCommandLineRunner implements CommandLineRunner {
                 .cameraEmail("cameraemail@test.se")
                 .build();
 
-        if (userRepo.findByEmail(newUser.getEmail()).isEmpty()) {
-            UserInfo savedUser = userRepo.save(newUser); // Save the user to the database
+        if (userRepository.findByEmail(newUser.getEmail()).isEmpty()) {
+            UserInfo savedUser = userRepository.save(newUser); // Save the user to the database
             logger.info("User added successfully: {}", savedUser);
         } else {
             logger.warn("User with email {} already exists!", newUser.getEmail());
@@ -42,8 +40,8 @@ public class MyCommandLineRunner implements CommandLineRunner {
 
 
         logger.info("Current users in the database:");
-        userRepo.findAll().forEach(user -> logger.info(user.toString()));
-        userRepo.findById(1L);
+        userRepository.findAll().forEach(user -> logger.info(user.toString()));
+        userRepository.findById(1L);
         logger.info("Tests completed.");
 
     }

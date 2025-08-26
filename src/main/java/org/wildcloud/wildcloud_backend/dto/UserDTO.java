@@ -5,22 +5,20 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Builder;
+import lombok.Data;
 
+@Data
 @Builder
-public record UserDTO(
+public class UserDTO{
 
-        Long userId,
 
-        @Email
-        String cameraEmail,
-
-        String firstName,
-        String lastName,
-        Long phoneNumber,
-
-        @NotBlank
-        @NotNull @Email @Size(min = 2, max = 200)
-        String email)
-
-{
+        Long id;
+        String cameraEmail;
+        String firstName;
+        String lastName;
+        Long phoneNumber;
+        String email;
 }
+
+
+

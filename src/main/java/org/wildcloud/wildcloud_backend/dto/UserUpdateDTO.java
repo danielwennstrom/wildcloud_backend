@@ -1,19 +1,24 @@
 package org.wildcloud.wildcloud_backend.dto;
 
-public class UserUpdateDTO extends UserRegistrationDTO{
+import jakarta.validation.constraints.Email;
+import lombok.Data;
+
+
+public class UserUpdateDTO extends UserRegistrationDTO {
 
 
     UserUpdateDTO(
 
-            Long userId,
+            Long id,
 
-            String cameraEmail,
             String firstName,
             String lastName,
             Long phoneNumber,
+
+            @Email
             String email,
             String password) {
-            super(userId, cameraEmail, firstName, lastName, phoneNumber, email, password);
+        super(id, firstName, lastName, phoneNumber, email, password);
     }
 
 }
