@@ -13,15 +13,13 @@ public interface UserRepo extends JpaRepository<UserInfo, Long> {
 
     Optional<UserInfo> findByEmail(String email);
     boolean existsByEmail(String email);
-    Optional<UserInfo> findById(Long UserId);
+    Optional<UserInfo> findById(Long id);
     List<UserInfo> findAll();
-    Optional<UserInfo> findAllCamerasByUserId(Long userId);
+    Optional<UserInfo> findAllCamerasById(Long id);
 
     Optional<UserInfo> findByPhoneNumber(Long phoneNumber);
 
 
     String email(@Email String email);
-
-    Long id(Long id);
 
 }

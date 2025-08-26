@@ -24,8 +24,26 @@ public class MyCommandLineRunner implements CommandLineRunner {
     public void run(String... args) throws Exception {
         logger.info("Starting application, and some tests...");
 
+        UserInfo newUser = UserInfo.builder()
+                .email("test1@test.se")
+                .password("admin1")
+                .firstName("Test")
+                .lastName("User")
+                .phoneNumber(1234567890L)
+                .cameraEmail("cameraemail@test.se")
+                .build();
+
+        if (userRepo.findByEmail(newUser.getEmail()).isEmpty()) {
+            UserInfo savedUser = userRepo.save(newUser); // Save the user to the database
+            logger.info("User added successfully: {}", savedUser);
+        } else {
+            logger.warn("User with email {} already exists!", newUser.getEmail());
+        }
+
+
         logger.info("Current users in the database:");
         userRepo.findAll().forEach(user -> logger.info(user.toString()));
+        userRepo.findById(1L);
         logger.info("Tests completed.");
 
     }
