@@ -3,8 +3,9 @@ package ImageUploadService {
     ' sourceType = email, cloud, whatever
     interface ImageUploadService {
         + processUpload(String sourceType, Object inputData) : UploadResult
+        + uploadImage(ImageUploadData imageData) : UploadResult
         + registerProcessor(String sourceType, ImageProcessor processor)
-        + registerValidator(ImageValidator validator)
+        + registerValidator(String beanName, ImageValidator validator)
     }
     
     /' The ApplicationEventPublisher executes registered @EventListener classes,
@@ -16,7 +17,6 @@ package ImageUploadService {
         - Map<String, ImageProcessor> processors;
         - List<ImageValidator> validators;
         - ApplicationEventPublisher eventPublisher
-        + uploadImage(ImageUploadData imageData) : UploadResult
         - StorageService storageService
         - MetadataService metadataService
     }
