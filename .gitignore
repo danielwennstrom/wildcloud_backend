@@ -31,3 +31,5 @@ build/
 
 ### VS Code ###
 .vscode/
+
+src/main/java/org/wildcloud/wildcloud_backend/config/.env
