@@ -9,6 +9,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 
+import java.util.HashSet;
+import java.util.Set;
+
 @Entity
 @Data
 @Builder
@@ -22,6 +25,9 @@ public class CameraInfo {
     @Column(unique = true, nullable = false, length = 100)
     @Email
     private String email;
+
+    @ManyToMany(mappedBy = "cameras" )
+    private Set<CameraInfo> cameras = new HashSet<>();
 
 
 

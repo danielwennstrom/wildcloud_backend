@@ -5,11 +5,14 @@ import org.springframework.transaction.annotation.Transactional;
 import org.wildcloud.wildcloud_backend.dto.UserDTO;
 import org.wildcloud.wildcloud_backend.dto.UserRegistrationDTO;
 import org.wildcloud.wildcloud_backend.dto.UserUpdateDTO;
+import org.wildcloud.wildcloud_backend.entity.CameraInfo;
 import org.wildcloud.wildcloud_backend.entity.UserInfo;
+import org.wildcloud.wildcloud_backend.repository.CameraRepository;
 import org.wildcloud.wildcloud_backend.repository.UserRepository;
 import org.wildcloud.wildcloud_backend.service.UserService;
 
 import java.util.List;
+import java.util.Set;
 
 import static java.util.stream.Collectors.toList;
 
@@ -18,9 +21,11 @@ public class UserServiceIMPL implements UserService {
 
 
     private final UserRepository userRepository;
+    private final CameraRepository cameraRepository;
 
-    public UserServiceIMPL(UserRepository userRepository) {
+    public UserServiceIMPL(UserRepository userRepository, CameraRepository cameraRepository) {
         this.userRepository = userRepository;
+        this.cameraRepository = cameraRepository;
     }
 
     @Override
@@ -146,17 +151,30 @@ public class UserServiceIMPL implements UserService {
     @Override
     @Transactional
     public UserDTO addCameraToUser(Long userId, String cameraEmail) {
-        if (userId == null) {
-            throw new IllegalArgumentException("User ID cannot be null");
-        }
 
         UserInfo userInfo = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
+        CameraInfo camera = cameraRepository.findByEmail(cameraEmail)
+                .orElseThrow(() -> new RuntimeException("Camera not found"));
 
-        if (!cameraEmail.equals(userInfo.getCameraEmail())) {
-            userInfo.setCameraEmail(cameraEmail);
-        }
-        return persist(userInfo);
+        userInfo.getCameras().add(camera);
+        userRepository.save(userInfo);
+
+        return UserDTO.builder()
+                .id(userInfo.getId())
+                .email(userInfo.getEmail())
+                .phoneNumber(userInfo.getPhoneNumber())
+                .firstName(userInfo.getFirstName())
+                .lastName(userInfo.getLastName())
+                .cameraEmail(userInfo.getCameraEmail())
+                .build();
+    }
+
+    @Override
+    public Set<CameraInfo> getCamerasByUserId(Long id) {
+        UserInfo userInfo = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User with id " + id + " does not exist"));
+        return userInfo.getCameras();
     }
 
     @Override

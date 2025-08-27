@@ -7,6 +7,8 @@ import lombok.*;
 import org.springframework.validation.annotation.Validated;
 
 import java.awt.*;
+import java.util.HashSet;
+import java.util.Set;
 
 
 @Entity
@@ -22,9 +24,13 @@ public class UserInfo {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "camera_email", referencedColumnName = "email")
-//    private CameraInfo cameraInfo;
+    @ManyToMany
+    @JoinTable(
+            name = "user_camera",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "camera_id")
+    )
+    private Set<CameraInfo> cameras = new HashSet<>();
 
 
     @Column
