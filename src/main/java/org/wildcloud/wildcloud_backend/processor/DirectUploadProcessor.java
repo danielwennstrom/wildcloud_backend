@@ -1,17 +1,22 @@
 package org.wildcloud.wildcloud_backend.processor;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.web.multipart.MultipartFile;
 import org.wildcloud.wildcloud_backend.exception.ProcessException;
-import org.wildcloud.wildcloud_backend.model.ImageProcessor;
+import org.wildcloud.wildcloud_backend.model.FileMetadata;
+import org.wildcloud.wildcloud_backend.model.ImageMetadata;
 import org.wildcloud.wildcloud_backend.model.ImageUploadData;
 import org.wildcloud.wildcloud_backend.request.DirectUploadRequest;
+import org.wildcloud.wildcloud_backend.service.MetadataExtractorService;
 
-import java.time.LocalDateTime;
 import java.util.Map;
-import java.util.Objects;
 
 @Component
+@RequiredArgsConstructor
 public class DirectUploadProcessor implements ImageProcessor {
+    private final MetadataExtractorService metadataExtractorService;
+
     @Override
     public ImageUploadData process(Object inputData) throws ProcessException {
         if (!(inputData instanceof DirectUploadRequest request)) {
@@ -19,18 +24,19 @@ public class DirectUploadProcessor implements ImageProcessor {
         }
 
         try {
+            MultipartFile file = request.getFile();
+
+            FileMetadata fileMetadata = metadataExtractorService.extractFileMetadata(file);
+            ImageMetadata imageMetadata = metadataExtractorService.extractImageMetadata(file);
+
             return ImageUploadData.builder()
-                    .buffer(request.getFile().getBytes())
-                    .filename(request.getFile().getOriginalFilename())
                     .userId(request.getUserId())
                     .cameraId(request.getCameraId())
-                    .contentType(request.getFile().getContentType())
                     .sourceType("direct")
-                    .capturedAt(LocalDateTime.now())
+                    .imageMetadata(imageMetadata)
+                    .fileMetadata(fileMetadata)
                     .sourceMetadata(Map.of(
-                            "uploadedVia", "web",
-                            "originalFilename", Objects.requireNonNull(request.getFile().getOriginalFilename())
-                    ))
+                            "uploadedVia", "web"))
                     .build();
         } catch (Exception e) {
             throw new ProcessException("Failed to process direct upload", e);

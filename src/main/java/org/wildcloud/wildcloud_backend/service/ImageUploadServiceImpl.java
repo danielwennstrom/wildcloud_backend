@@ -5,10 +5,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.wildcloud.wildcloud_backend.entity.ImageEntity;
 import org.wildcloud.wildcloud_backend.exception.UploadException;
-import org.wildcloud.wildcloud_backend.model.ImageProcessor;
 import org.wildcloud.wildcloud_backend.model.ImageUploadData;
-import org.wildcloud.wildcloud_backend.model.ImageValidator;
 import org.wildcloud.wildcloud_backend.model.UploadResult;
+import org.wildcloud.wildcloud_backend.processor.ImageProcessor;
+import org.wildcloud.wildcloud_backend.validator.ImageValidator;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -35,7 +35,7 @@ public class ImageUploadServiceImpl implements ImageUploadService {
 
             ImageUploadData imageData = processor.process(inputData);
             for (ImageValidator validator : validators) {
-                validator.validate(imageData);
+                validator.validate(imageData.getFileMetadata());
             }
 
             UploadResult result = uploadImage(imageData);
@@ -51,16 +51,16 @@ public class ImageUploadServiceImpl implements ImageUploadService {
         ImageEntity imageEntity = ImageEntity.builder()
                 .userId(imageData.getUserId())
                 .cameraId(imageData.getCameraId())
-                .filename(imageData.getFilename())
-                .fileSize((long) imageData.getBuffer().length)
-                .contentType(imageData.getContentType())
+                .fileName(imageData.getFileMetadata().getFileName())
+                .fileSize((long) imageData.getFileMetadata().getBuffer().length)
+                .contentType(imageData.getFileMetadata().getContentType())
                 .sourceType(imageData.getSourceType())
                 .sourceMetadata(imageData.getSourceMetadata())
-                .capturedAt(imageData.getCapturedAt())
+                .capturedAt(imageData.getImageMetadata().getCapturedAt())
                 .uploadedAt(LocalDateTime.now())
-
                 .build();
 
+        System.out.println(imageData);
         return UploadResult.builder()
                 .id(imageEntity.getId())
                 .url("test")

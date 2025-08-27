@@ -5,8 +5,8 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
-import org.wildcloud.wildcloud_backend.model.ImageValidator;
 import org.wildcloud.wildcloud_backend.service.ImageUploadService;
+import org.wildcloud.wildcloud_backend.validator.ImageValidator;
 
 import java.util.Map;
 

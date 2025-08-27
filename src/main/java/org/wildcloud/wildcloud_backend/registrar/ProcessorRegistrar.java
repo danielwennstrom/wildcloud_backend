@@ -5,7 +5,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
-import org.wildcloud.wildcloud_backend.model.ImageProcessor;
+import org.wildcloud.wildcloud_backend.processor.ImageProcessor;
 import org.wildcloud.wildcloud_backend.service.ImageUploadService;
 
 import java.util.Map;

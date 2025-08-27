@@ -7,7 +7,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Data
 @Builder
 public class DirectUploadRequest {
-    private MultipartFile file;
     private String userId;
     private String cameraId;
+    private MultipartFile file;
 }
