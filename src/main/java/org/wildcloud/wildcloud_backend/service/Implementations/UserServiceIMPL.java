@@ -13,6 +13,7 @@ import org.wildcloud.wildcloud_backend.service.UserService;
 
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
 
@@ -119,7 +120,7 @@ public class UserServiceIMPL implements UserService {
         UserInfo userInfo = userRepository.findByEmail(userUpdateDTO.getEmail())
                 .orElseThrow(() -> new RuntimeException("User with email " + userUpdateDTO.getEmail() + " not found"));
 
-        // Update fields if they are provided and different
+
         if (userUpdateDTO.getFirstName() != null && !userUpdateDTO.getFirstName().isBlank() &&
                 !userUpdateDTO.getFirstName().equals(userInfo.getFirstName())) {
             userInfo.setFirstName(userUpdateDTO.getFirstName());
@@ -132,13 +133,10 @@ public class UserServiceIMPL implements UserService {
                 !userUpdateDTO.getPhoneNumber().equals(userInfo.getPhoneNumber())) {
             userInfo.setPhoneNumber(userUpdateDTO.getPhoneNumber());
         }
-//TODO: Skapa en metod för att lägga till kamera och ta bort kamera från en user.
 
 
-        // Save the updated entity
         userRepository.save(userInfo);
 
-        // Return the updated user as a DTO
         return (UserUpdateDTO) UserUpdateDTO.builder()
                 .id(userInfo.getId())
                 .email(userInfo.getEmail())
@@ -148,13 +146,24 @@ public class UserServiceIMPL implements UserService {
                 .build();
     }
 
+    @Transactional
+    @Override
+    public Set<String> getCameraEmailByUserId(Long id) {
+        UserInfo userInfo = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User with id " + id + " does not exist"));
+        return userInfo.getCameras().stream()
+                .map(CameraInfo::getCameraEmail)
+                .collect(Collectors.toSet());
+    }
+
+
     @Override
     @Transactional
     public UserDTO addCameraToUser(Long userId, String cameraEmail) {
 
         UserInfo userInfo = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        CameraInfo camera = cameraRepository.findByEmail(cameraEmail)
+        CameraInfo camera = cameraRepository.findByCameraEmail(cameraEmail)
                 .orElseThrow(() -> new RuntimeException("Camera not found"));
 
         userInfo.getCameras().add(camera);
@@ -171,11 +180,36 @@ public class UserServiceIMPL implements UserService {
     }
 
     @Override
-    public Set<CameraInfo> getCamerasByUserId(Long id) {
-        UserInfo userInfo = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User with id " + id + " does not exist"));
-        return userInfo.getCameras();
+    @Transactional
+    public Set<String> getCamerasByUserId(Long id) {
+
+            UserInfo userInfo = userRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("User with id " + id + " does not exist"));
+
+            return userInfo.getCameras().stream()
+                    .map(CameraInfo::getCameraEmail)
+                    .collect(Collectors.toSet());
+
     }
+
+
+    @Override
+    @Transactional
+    public void deleteCameraFromUser(Long userId, String cameraEmail) {
+        UserInfo userInfo = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        CameraInfo camera = cameraRepository.findByCameraEmail(cameraEmail)
+                .orElseThrow(() -> new RuntimeException("Camera not found"));
+
+        if (userInfo.getCameras().contains(camera)) {
+            userInfo.getCameras().remove(camera);
+            userRepository.save(userInfo);
+        } else {
+            throw new RuntimeException("Camera not associated with user");
+        }
+
+    }
+
 
     @Override
     public void deleteUser(Long id) {

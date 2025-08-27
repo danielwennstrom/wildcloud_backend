@@ -28,7 +28,7 @@ public class UserInfo {
     @JoinTable(
             name = "user_camera",
             joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "camera_id")
+            inverseJoinColumns = @JoinColumn(name = "camera_email")
     )
     private Set<CameraInfo> cameras = new HashSet<>();
 

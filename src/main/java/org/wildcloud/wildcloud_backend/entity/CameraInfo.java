@@ -24,10 +24,10 @@ public class CameraInfo {
     @Id
     @Column(unique = true, nullable = false, length = 100)
     @Email
-    private String email;
+    private String cameraEmail;
 
     @ManyToMany(mappedBy = "cameras" )
-    private Set<CameraInfo> cameras = new HashSet<>();
+    private Set<UserInfo> users = new HashSet<>();
 
 
 

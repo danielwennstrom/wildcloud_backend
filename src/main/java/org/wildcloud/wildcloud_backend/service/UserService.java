@@ -1,5 +1,7 @@
 package org.wildcloud.wildcloud_backend.service;
 
+import org.springframework.http.StreamingHttpOutputMessage;
+import org.springframework.transaction.annotation.Transactional;
 import org.wildcloud.wildcloud_backend.dto.UserDTO;
 import org.wildcloud.wildcloud_backend.dto.UserRegistrationDTO;
 import org.wildcloud.wildcloud_backend.dto.UserUpdateDTO;
@@ -17,9 +19,15 @@ public interface UserService {
     UserRegistrationDTO createUser(String email, String firstName, String lastName, Long phoneNumber, String password, String cameraEmail);
 
     UserUpdateDTO updateUser(UserUpdateDTO userUpdateDTO);
+
+    @Transactional
+    Set<String> getCameraEmailByUserId(Long id);
+
     UserDTO addCameraToUser(Long userId, String cameraEmail);
 
-    Set<CameraInfo> getCamerasByUserId(Long id);
+    Set<String> getCamerasByUserId(Long id);
+
+    void deleteCameraFromUser(Long userId, String cameraEmail);
 
     void deleteUser(Long id);
 
