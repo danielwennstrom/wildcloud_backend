@@ -87,6 +87,7 @@ public class UserServiceIMPL implements UserService {
                 .build();
     }
 
+    //TODO: Returna inte objektet utan bara en bekräftelse att användaren är skapad.
     @Override
     public UserRegistrationDTO createUser(String email, String firstName, String lastName, Long phoneNumber, String password, String cameraEmail) {
         try {
