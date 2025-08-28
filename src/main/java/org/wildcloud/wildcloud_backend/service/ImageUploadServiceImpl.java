@@ -5,12 +5,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.wildcloud.wildcloud_backend.entity.ImageEntity;
 import org.wildcloud.wildcloud_backend.exception.UploadException;
+import org.wildcloud.wildcloud_backend.exception.ValidationException;
 import org.wildcloud.wildcloud_backend.model.ImageUploadData;
 import org.wildcloud.wildcloud_backend.model.UploadResult;
 import org.wildcloud.wildcloud_backend.processor.ImageProcessor;
+import org.wildcloud.wildcloud_backend.repository.ImageRepository;
 import org.wildcloud.wildcloud_backend.validator.ImageValidator;
 
-import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -21,50 +23,70 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ImageUploadServiceImpl implements ImageUploadService {
     private final Map<String, ImageProcessor> processors = new ConcurrentHashMap<>();
     private final List<ImageValidator> validators;
+    private final ImageRepository imageRepository;
 //    private final StorageService storageService;
 //    private final MetadataService metadataService;
 //    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     public UploadResult processUpload(String sourceType, Object inputData) throws UploadException {
+        ImageProcessor processor = processors.get(sourceType);
+        if (processor == null) {
+            throw new UploadException("No processor registered for source: " + sourceType);
+        }
+
         try {
-            ImageProcessor processor = processors.get(sourceType);
-            if (processor == null) {
-                throw new UploadException("No processor registered for source: " + sourceType);
-            }
+            List<ImageUploadData> imageData = processor.process(inputData);
 
-            ImageUploadData imageData = processor.process(inputData);
-            for (ImageValidator validator : validators) {
-                validator.validate(imageData.getFileMetadata());
-            }
+            imageData.forEach(data ->
+                    validators.forEach(v -> {
+                        try {
+                            v.validate(data);
+                        } catch (ValidationException e) {
+                            throw new RuntimeException(e);
+                        }
+                    })
+            );
 
-            UploadResult result = uploadImage(imageData);
-
-            return result;
-        } catch (Exception e) {
+            return uploadImages(imageData);
+        } catch (
+                Exception e) {
             throw new UploadException("Upload failed", e);
         }
     }
 
     @Override
-    public UploadResult uploadImage(ImageUploadData imageData) {
-        ImageEntity imageEntity = ImageEntity.builder()
-                .userId(imageData.getUserId())
-                .cameraId(imageData.getCameraId())
-                .fileName(imageData.getFileMetadata().getFileName())
-                .fileSize((long) imageData.getFileMetadata().getBuffer().length)
-                .contentType(imageData.getFileMetadata().getContentType())
-                .sourceType(imageData.getSourceType())
-                .sourceMetadata(imageData.getSourceMetadata())
-                .capturedAt(imageData.getImageMetadata().getCapturedAt())
-                .uploadedAt(LocalDateTime.now())
-                .build();
+    public UploadResult uploadImages(List<ImageUploadData> imageDataList) {
+        List<ImageEntity> imageEntityList = new ArrayList<>();
 
-        System.out.println(imageData);
+        for (ImageUploadData data : imageDataList) {
+            ImageEntity imageEntity = ImageEntity.builder()
+                    .userId(data.getUserId())
+                    .cameraId(data.getCameraId())
+                    .sourceType(data.getSourceType())
+                    .sourceMetadata(data.getSourceMetadata())
+                    .imageMetadata(data.getImageMetadata())
+                    .fileMetadata(data.getFileMetadata())
+                    .build();
+
+            if (data.getImageMetadata() != null) {
+                data.getImageMetadata().setImageEntity(imageEntity);
+                imageEntity.setImageMetadata(data.getImageMetadata());
+            }
+
+            if (data.getFileMetadata() != null) {
+                data.getFileMetadata().setImageEntity(imageEntity);
+                imageEntity.setFileMetadata(data.getFileMetadata());
+            }
+
+//            ImageEntity savedEntity = 
+            imageEntityList.add(imageEntity);
+            imageRepository.save(imageEntity);
+        }
+
         return UploadResult.builder()
-                .id(imageEntity.getId())
-                .url("test")
-                .metadata(imageEntity)
+                .uploadedCount(imageEntityList.size())
+                .metadataList(imageEntityList)
                 .build();
     }
 

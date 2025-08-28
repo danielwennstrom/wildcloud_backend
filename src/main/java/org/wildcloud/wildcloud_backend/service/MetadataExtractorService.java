@@ -34,17 +34,13 @@ public class MetadataExtractorService {
         byte[] fileBytes = multipartFile.getBytes();
 
         OffsetDateTime capturedAt;
-        try (InputStream is = new ByteArrayInputStream(fileBytes)) {
-            capturedAt = exifUtils.getOriginalOffsetDateTime(is);
-        } catch (Exception e) {
-            capturedAt = null;
-        }
-
         OffsetDateTime lastModified;
-        try (InputStream is = new ByteArrayInputStream(fileBytes)) {
-            lastModified = exifUtils.getModifiedOffsetDateTime(is);
+        try (InputStream is1 = new ByteArrayInputStream(fileBytes);
+             InputStream is2 = new ByteArrayInputStream(fileBytes)) {
+            capturedAt = exifUtils.getOriginalOffsetDateTime(is1);
+            lastModified = exifUtils.getModifiedOffsetDateTime(is2);
         } catch (Exception e) {
-            lastModified = null;
+            throw new RuntimeException(e);
         }
 
         return ImageMetadata.builder()
@@ -64,9 +60,8 @@ public class MetadataExtractorService {
 
         return FileMetadata.builder()
                 .fileName(anonymizedName)
-                .originalFilename(originalName)
+                .originalFileName(originalName)
                 .size((long) fileBytes.length)
-                .buffer(fileBytes)
                 .contentType(multipartFile.getContentType())
                 .build();
     }

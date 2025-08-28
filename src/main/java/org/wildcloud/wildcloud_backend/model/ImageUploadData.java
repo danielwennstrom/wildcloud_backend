@@ -11,6 +11,7 @@ public class ImageUploadData {
     private String userId;
     private String cameraId;
     private String sourceType;
+    private byte[] buffer;
     private Map<String, Object> sourceMetadata;
     private FileMetadata fileMetadata;
     private ImageMetadata imageMetadata;

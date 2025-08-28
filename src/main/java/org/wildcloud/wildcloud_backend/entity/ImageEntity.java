@@ -1,30 +1,37 @@
 package org.wildcloud.wildcloud_backend.entity;
 
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+import org.wildcloud.wildcloud_backend.model.FileMetadata;
+import org.wildcloud.wildcloud_backend.model.ImageMetadata;
 
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 import java.util.Map;
 
-//@Entity
+@Entity
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class ImageEntity {
     @Id
     @GeneratedValue
     private Long id;
     private String userId;
     private String cameraId;
-    private String fileName;
-    private Long fileSize;
-    private String contentType;
     private String sourceType;
-    private OffsetDateTime capturedAt;
-    private LocalDateTime uploadedAt;
-    //    @JdbcTypeCode(SqlTypes.JSON)
-//    @Column(columnDefinition = "jsonb")
+    @OneToOne(mappedBy = "imageEntity", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    private FileMetadata fileMetadata;
+    @OneToOne(mappedBy = "imageEntity", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    private ImageMetadata imageMetadata;
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(columnDefinition = "jsonb")
     private Map<String, Object> sourceMetadata;
 }

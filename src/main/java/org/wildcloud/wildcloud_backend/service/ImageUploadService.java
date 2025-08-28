@@ -6,10 +6,12 @@ import org.wildcloud.wildcloud_backend.model.UploadResult;
 import org.wildcloud.wildcloud_backend.processor.ImageProcessor;
 import org.wildcloud.wildcloud_backend.validator.ImageValidator;
 
+import java.util.List;
+
 public interface ImageUploadService {
     UploadResult processUpload(String sourceType, Object inputData) throws UploadException;
 
-    UploadResult uploadImage(ImageUploadData imageData);
+    UploadResult uploadImages(List<ImageUploadData> imageData);
 
     void registerProcessor(String sourceType, ImageProcessor processor);
 

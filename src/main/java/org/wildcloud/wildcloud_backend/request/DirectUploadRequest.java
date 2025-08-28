@@ -9,5 +9,5 @@ import org.springframework.web.multipart.MultipartFile;
 public class DirectUploadRequest {
     private String userId;
     private String cameraId;
-    private MultipartFile file;
+    private MultipartFile[] files;
 }
