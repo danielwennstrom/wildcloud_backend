@@ -87,16 +87,15 @@ public class UserServiceIMPL implements UserService {
     }
 
     @Override
-    public UserRegistrationDTO createUser(String email, String firstName, String lastName, Long phoneNumber, String password, String cameraEmail) {
+    public UserRegistrationDTO createUser(UserRegistrationDTO userRegistrationDTO) {
         try {
-            if (userRepository.existsByEmail(email)) {
+            if (userRepository.existsByEmail(userRegistrationDTO.getEmail()) == false) {
                 UserInfo newUser = userRepository.save(UserInfo.builder()
-                        .email(email)
-                        .firstName(firstName)
-                        .lastName(lastName)
-                        .phoneNumber(phoneNumber)
-                        .password(password)
-                        .cameraEmail(cameraEmail)
+                        .email(userRegistrationDTO.getEmail())
+                        .firstName(userRegistrationDTO.getFirstName())
+                        .lastName(userRegistrationDTO.getLastName())
+                        .phoneNumber(userRegistrationDTO.getPhoneNumber())
+                        .password(userRegistrationDTO.getPassword())
                         .build());
                 return UserUpdateDTO.builder()
                         .id(newUser.getId())

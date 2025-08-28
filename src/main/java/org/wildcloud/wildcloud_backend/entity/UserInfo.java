@@ -52,16 +52,6 @@ public class UserInfo {
     private String cameraEmail; //Email för kameror som användaren har tillgång till.
 
 
-    @Lob
-    @Basic(fetch = FetchType.LAZY)
-    @Column(name = "image_data")
-    private byte[] imageData;
-
-    @Column(name = "image_content_type" ,length = 50)
-    private String imageContentType; //Typ vad är det i bilden, är det rådjur, älg, löv osv? För AI senare?
-
-    @Column(name = "image_filename", length = 50)
-    private String imageFilename;
 
 
     @Column(nullable = false)
