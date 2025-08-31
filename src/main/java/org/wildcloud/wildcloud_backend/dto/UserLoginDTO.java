@@ -1,12 +1,16 @@
 package org.wildcloud.wildcloud_backend.dto;
 
 import jakarta.validation.constraints.Email;
+import lombok.Builder;
+import lombok.Data;
 
+@Data
+@Builder
 public class UserLoginDTO {
 
-    @Email
-    String email;
-    String password;
+
+    private String email;
+    private String password;
 
 
 

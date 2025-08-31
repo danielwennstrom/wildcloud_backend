@@ -4,6 +4,8 @@ package org.wildcloud.wildcloud_backend.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.wildcloud.wildcloud_backend.dto.UserLoginDTO;
+import org.wildcloud.wildcloud_backend.dto.UserRegistrationDTO;
 import org.wildcloud.wildcloud_backend.entity.CameraInfo;
 import org.wildcloud.wildcloud_backend.service.UserService;
 
@@ -12,6 +14,22 @@ import java.util.Set;
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
+
+    @PostMapping("/createUser")
+    public ResponseEntity<UserRegistrationDTO> createUser(@RequestBody UserRegistrationDTO userRegistrationRequest) {
+        UserRegistrationDTO userCreated = userService.createUser(userRegistrationRequest);
+        return ResponseEntity.ok(userCreated);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<UserLoginDTO> loginUser(@RequestBody UserLoginDTO userLoginRequest) {
+        UserLoginDTO userLoginResponse = userService.loginUser(userLoginRequest);
+        if (userLoginResponse != null) {
+            return ResponseEntity.ok(userLoginResponse);
+        } else {
+            return ResponseEntity.status(401).build();
+        }
+    }
 
     @Autowired
     private UserService userService;

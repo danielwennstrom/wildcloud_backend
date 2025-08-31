@@ -19,14 +19,8 @@ public class UserRegistrationDTO{
     String lastName;
     Long phoneNumber;
 
-    @NotBlank
-    @NotNull
-    @Email @Size(min = 2, max = 200)
-    String email;
-
-    @NotBlank
-    @Size(min = 6, max = 22)
-    String password;
+    private String email;
+    private String password;
 
 
 

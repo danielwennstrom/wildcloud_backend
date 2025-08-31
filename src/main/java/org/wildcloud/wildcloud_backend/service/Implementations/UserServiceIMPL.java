@@ -3,6 +3,7 @@ package org.wildcloud.wildcloud_backend.service.Implementations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.wildcloud.wildcloud_backend.dto.UserDTO;
+import org.wildcloud.wildcloud_backend.dto.UserLoginDTO;
 import org.wildcloud.wildcloud_backend.dto.UserRegistrationDTO;
 import org.wildcloud.wildcloud_backend.dto.UserUpdateDTO;
 import org.wildcloud.wildcloud_backend.entity.CameraInfo;
@@ -40,7 +41,7 @@ public class UserServiceIMPL implements UserService {
                         .phoneNumber(userInfo.getPhoneNumber())
                         .firstName(userInfo.getFirstName())
                         .lastName(userInfo.getLastName())
-                        .cameraEmail(userInfo.getCameraEmail())
+//                        .cameraEmail(userInfo.getCameraEmail())
                         .build())
                 .collect(toList());
     }
@@ -55,7 +56,7 @@ public class UserServiceIMPL implements UserService {
                 .phoneNumber(userInfo.getPhoneNumber())
                 .firstName(userInfo.getFirstName())
                 .lastName(userInfo.getLastName())
-                .cameraEmail(userInfo.getCameraEmail())
+//                .cameraEmail(userInfo.getCameraEmail())
                 .build();
     }
 
@@ -69,7 +70,7 @@ public class UserServiceIMPL implements UserService {
                 .phoneNumber(userInfo.getPhoneNumber())
                 .firstName(userInfo.getFirstName())
                 .lastName(userInfo.getLastName())
-                .cameraEmail(userInfo.getCameraEmail())
+//                .cameraEmail(userInfo.getCameraEmail())
                 .build();
     }
 
@@ -83,7 +84,7 @@ public class UserServiceIMPL implements UserService {
                 .phoneNumber(userInfo.getPhoneNumber())
                 .firstName(userInfo.getFirstName())
                 .lastName(userInfo.getLastName())
-                .cameraEmail(userInfo.getCameraEmail())
+//                .cameraEmail(userInfo.getCameraEmail())
                 .build();
     }
 
@@ -111,6 +112,18 @@ public class UserServiceIMPL implements UserService {
             throw new RuntimeException(e);
         }
         throw new RuntimeException("Email already exists");
+    }
+
+    @Override
+    public UserLoginDTO loginUser(UserLoginDTO userLoginRequest) {
+        UserInfo userLoginInfo = userRepository.findByEmail(userLoginRequest.getEmail())
+                .orElseThrow(() -> new RuntimeException("User with email " + userLoginRequest.getEmail() + " not found"));
+        if (!userLoginInfo.getPassword().equals(userLoginRequest.getPassword())) {
+            throw new RuntimeException("Incorrect password");
+        }
+        return UserLoginDTO.builder()
+                .email(userLoginRequest.getEmail()).
+        build();
     }
 
     @Override
@@ -228,7 +241,7 @@ public class UserServiceIMPL implements UserService {
                 .phoneNumber(userInfo.getPhoneNumber())
                 .firstName(userInfo.getFirstName())
                 .lastName(userInfo.getLastName())
-                .cameraEmail(userInfo.getCameraEmail())
+//                .cameraEmail(userInfo.getCameraEmail())
                 .build();
     }
 }
