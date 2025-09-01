@@ -49,7 +49,7 @@ public class DirectUploadProcessor implements ImageProcessor {
                         .build();
 
                 result.add(imageData);
-                log.info("File processed: name={}, capturedAt={}",
+                log.info("File processed: name={}, size={}",
                         file.getOriginalFilename(),
                         file.getSize());
             }

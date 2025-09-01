@@ -24,8 +24,7 @@ public class ImageUploadServiceImpl implements ImageUploadService {
     private final Map<String, ImageProcessor> processors = new ConcurrentHashMap<>();
     private final List<ImageValidator> validators;
     private final ImageRepository imageRepository;
-//    private final StorageService storageService;
-//    private final MetadataService metadataService;
+    private final StorageUploadService storageUploadService;
 //    private final ApplicationEventPublisher eventPublisher;
 
     @Override
@@ -60,6 +59,14 @@ public class ImageUploadServiceImpl implements ImageUploadService {
         List<ImageEntity> imageEntityList = new ArrayList<>();
 
         for (ImageUploadData data : imageDataList) {
+            String imageKey = "images/"
+                    + (data.getUserId() != null ? data.getUserId() : "null")
+                    + "/"
+                    + (data.getCameraId() != null ? data.getCameraId() : "null")
+                    + "/"
+                    + data.getFileMetadata().getFileName();
+            String imageUrl = storageUploadService.uploadImage(imageKey, data.getBuffer(), data.getFileMetadata().getContentType());
+
             ImageEntity imageEntity = ImageEntity.builder()
                     .userId(data.getUserId())
                     .cameraId(data.getCameraId())
@@ -67,6 +74,8 @@ public class ImageUploadServiceImpl implements ImageUploadService {
                     .sourceMetadata(data.getSourceMetadata())
                     .imageMetadata(data.getImageMetadata())
                     .fileMetadata(data.getFileMetadata())
+                    .storageKey(imageKey)
+                    .storageUrl(imageUrl)
                     .build();
 
             if (data.getImageMetadata() != null) {
