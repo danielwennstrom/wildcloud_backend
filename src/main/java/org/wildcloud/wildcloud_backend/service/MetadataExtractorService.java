@@ -2,7 +2,7 @@ package org.wildcloud.wildcloud_backend.service;
 
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
+import org.wildcloud.wildcloud_backend.domain.FileAdapter;
 import org.wildcloud.wildcloud_backend.model.FileMetadata;
 import org.wildcloud.wildcloud_backend.model.ImageMetadata;
 import org.wildcloud.wildcloud_backend.util.ExifUtils;
@@ -30,8 +30,8 @@ public class MetadataExtractorService {
         }
     }
 
-    public ImageMetadata extractImageMetadata(MultipartFile multipartFile) throws IOException {
-        byte[] fileBytes = multipartFile.getBytes();
+    public ImageMetadata extractImageMetadata(FileAdapter fileAdapter) throws IOException {
+        byte[] fileBytes = fileAdapter.getBytes();
 
         OffsetDateTime capturedAt;
         OffsetDateTime lastModified;
@@ -49,10 +49,10 @@ public class MetadataExtractorService {
                 .build();
     }
 
-    public FileMetadata extractFileMetadata(MultipartFile multipartFile) throws IOException {
-        byte[] fileBytes = multipartFile.getBytes();
+    public FileMetadata extractFileMetadata(FileAdapter fileAdapter) throws IOException {
+        byte[] fileBytes = fileAdapter.getBytes();
 
-        String originalName = multipartFile.getOriginalFilename();
+        String originalName = fileAdapter.getOriginalFilename();
         if (originalName == null || originalName.isBlank()) {
             originalName = "file";
         }
@@ -62,7 +62,7 @@ public class MetadataExtractorService {
                 .fileName(anonymizedName)
                 .originalFileName(originalName)
                 .size((long) fileBytes.length)
-                .contentType(multipartFile.getContentType())
+                .contentType(fileAdapter.getContentType())
                 .build();
     }
 }

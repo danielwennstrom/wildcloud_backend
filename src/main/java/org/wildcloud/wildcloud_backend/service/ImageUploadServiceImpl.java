@@ -15,6 +15,7 @@ import org.wildcloud.wildcloud_backend.validator.ImageValidator;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
@@ -59,13 +60,8 @@ public class ImageUploadServiceImpl implements ImageUploadService {
         List<ImageEntity> imageEntityList = new ArrayList<>();
 
         for (ImageUploadData data : imageDataList) {
-            String imageKey = "images/"
-                    + (data.getUserId() != null ? data.getUserId() : "null")
-                    + "/"
-                    + (data.getCameraId() != null ? data.getCameraId() : "null")
-                    + "/"
-                    + data.getFileMetadata().getFileName();
-            String imageUrl = storageUploadService.uploadImage(imageKey, data.getBuffer(), data.getFileMetadata().getContentType());
+            String imageKey = buildImageKey(data);
+            storageUploadService.uploadImage(imageKey, data.getBuffer(), data.getFileMetadata().getContentType());
 
             ImageEntity imageEntity = ImageEntity.builder()
                     .userId(data.getUserId())
@@ -75,7 +71,6 @@ public class ImageUploadServiceImpl implements ImageUploadService {
                     .imageMetadata(data.getImageMetadata())
                     .fileMetadata(data.getFileMetadata())
                     .storageKey(imageKey)
-                    .storageUrl(imageUrl)
                     .build();
 
             if (data.getImageMetadata() != null) {
@@ -88,7 +83,6 @@ public class ImageUploadServiceImpl implements ImageUploadService {
                 imageEntity.setFileMetadata(data.getFileMetadata());
             }
 
-//            ImageEntity savedEntity = 
             imageEntityList.add(imageEntity);
             imageRepository.save(imageEntity);
         }
@@ -109,5 +103,13 @@ public class ImageUploadServiceImpl implements ImageUploadService {
     public void registerValidator(String beanName, ImageValidator validator) {
         validators.add(validator);
         log.info("Registered validator: {}", beanName);
+    }
+
+    private String buildImageKey(ImageUploadData imageData) {
+        return String.format("images/%s/%s/%s",
+                Objects.toString(imageData.getUserId(), "null"),
+                Objects.toString(imageData.getCameraId(), "null"),
+                imageData.getFileMetadata().getFileName()
+        );
     }
 }

@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
+import org.wildcloud.wildcloud_backend.adapter.MultipartFileAdapter;
 import org.wildcloud.wildcloud_backend.exception.ProcessException;
 import org.wildcloud.wildcloud_backend.model.FileMetadata;
 import org.wildcloud.wildcloud_backend.model.ImageMetadata;
@@ -34,8 +35,10 @@ public class DirectUploadProcessor implements ImageProcessor {
                 log.debug("Processing file: name={}, size={} bytes",
                         file.getOriginalFilename(), file.getSize());
 
-                FileMetadata fileMetadata = metadataExtractorService.extractFileMetadata(file);
-                ImageMetadata imageMetadata = metadataExtractorService.extractImageMetadata(file);
+                MultipartFileAdapter adapter = new MultipartFileAdapter(file);
+
+                FileMetadata fileMetadata = metadataExtractorService.extractFileMetadata(adapter);
+                ImageMetadata imageMetadata = metadataExtractorService.extractImageMetadata(adapter);
 
                 ImageUploadData imageData = ImageUploadData.builder()
                         .userId(request.getUserId())

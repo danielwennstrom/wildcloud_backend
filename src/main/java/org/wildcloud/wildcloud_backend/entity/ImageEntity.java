@@ -35,5 +35,4 @@ public class ImageEntity {
     @Column(columnDefinition = "jsonb")
     private Map<String, Object> sourceMetadata;
     private String storageKey;
-    private String storageUrl;
 }
