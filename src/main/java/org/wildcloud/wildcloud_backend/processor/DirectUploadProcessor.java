@@ -51,7 +51,7 @@ public class DirectUploadProcessor implements ImageProcessor {
                 result.add(imageData);
                 log.info("File processed: name={}, capturedAt={}",
                         file.getOriginalFilename(),
-                        imageMetadata.getCapturedAt());
+                        file.getSize());
             }
 
             return result;

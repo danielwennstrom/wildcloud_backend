@@ -39,13 +39,14 @@ package ImageUploadService {
     
     MetadataService ..> ImageRepository
     MetadataService ..> ImageEntity
-    ImageEntity *- ImageMetadata
+
     ImageUploadData ..> ImageMetadata
+    ImageUploadData ..> FileMetadata
     
     class ImageEntity {
         - String userId
         - String cameraId
-        - String filename
+        - String fileName
         - String contentType
         - LocalDateTime capturedAt
         - String sourceType
@@ -54,21 +55,28 @@ package ImageUploadService {
     }
     
     class ImageMetadata {
-        ...
+        - OffsetDateTime capturedAt
+        - OffsetDateTime lastModified
+    }
+    
+    class FileMetadata {
+        - String fileName
+        - String originalFileName
+        - String contentType
+        - Long size
+        - byte[] buffer
     }
     
     /' sourceMetadata could have metadata like which cloud service the image is from, etc.
        Basically whatever we want
     '/
     class ImageUploadData {
-        - byte[] buffer
-        - String filename
         - String userId
         - String cameraId
-        - String contentType
         - String sourceType
         - Map<String, Object> sourceMetadata
-        - LocalDateTime capturedAt
+        - ImageMetadata imageMetadata
+        - FileMetadata FileMetadata
     }
     
     ' Strategy pattern (Manual upload, e-mail, cloud storage, whatever)
