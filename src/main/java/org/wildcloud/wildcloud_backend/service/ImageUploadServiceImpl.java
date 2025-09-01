@@ -26,6 +26,7 @@ public class ImageUploadServiceImpl implements ImageUploadService {
     private final List<ImageValidator> validators;
     private final ImageRepository imageRepository;
     private final StorageUploadService storageUploadService;
+    // TODO: implementera events, kan användas till notifications etc.
 //    private final ApplicationEventPublisher eventPublisher;
 
     @Override
@@ -73,15 +74,7 @@ public class ImageUploadServiceImpl implements ImageUploadService {
                     .storageKey(imageKey)
                     .build();
 
-            if (data.getImageMetadata() != null) {
-                data.getImageMetadata().setImageEntity(imageEntity);
-                imageEntity.setImageMetadata(data.getImageMetadata());
-            }
-
-            if (data.getFileMetadata() != null) {
-                data.getFileMetadata().setImageEntity(imageEntity);
-                imageEntity.setFileMetadata(data.getFileMetadata());
-            }
+            setEntityAssociations(data, imageEntity);
 
             imageEntityList.add(imageEntity);
             imageRepository.save(imageEntity);
@@ -91,6 +84,18 @@ public class ImageUploadServiceImpl implements ImageUploadService {
                 .uploadedCount(imageEntityList.size())
                 .metadataList(imageEntityList)
                 .build();
+    }
+
+    private void setEntityAssociations(ImageUploadData data, ImageEntity imageEntity) {
+        if (data.getImageMetadata() != null) {
+            data.getImageMetadata().setImageEntity(imageEntity);
+            imageEntity.setImageMetadata(data.getImageMetadata());
+        }
+
+        if (data.getFileMetadata() != null) {
+            data.getFileMetadata().setImageEntity(imageEntity);
+            imageEntity.setFileMetadata(data.getFileMetadata());
+        }
     }
 
     @Override

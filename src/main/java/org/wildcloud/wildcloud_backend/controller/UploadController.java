@@ -22,6 +22,7 @@ import java.util.Map;
 public class UploadController {
     private final ImageUploadService uploadService;
 
+    // TODO: request DTO på frontend:s sida
     @PostMapping("/direct")
     public ResponseEntity<?> directUpload(@RequestParam("file") MultipartFile[] files) {
         try {
@@ -29,6 +30,7 @@ public class UploadController {
                     .files(files)
                     .build();
 
+            // TODO: skicka tillbaka en DTO? alt. ingenting alls
             UploadResult result = uploadService.processUpload("direct", request);
             return ResponseEntity.ok(result);
         } catch (Exception e) {

@@ -29,9 +29,6 @@ public class R2Config {
     @Primary
     public S3Client r2Client() {
         log.info("R2 Client created for account: {}", r2Properties.getAccountId());
-        log.info("R2 Endpoint: {}", r2Properties.getEndpoint());
-        log.info("R2 Access: {}", r2Properties.getAccessKey());
-        log.info("R2 Secret: {}", r2Properties.getSecretKey());
 
         AwsBasicCredentials credentials = AwsBasicCredentials.create(
                 r2Properties.getAccessKey(), r2Properties.getSecretKey()
@@ -44,11 +41,11 @@ public class R2Config {
                 .region(Region.US_EAST_1)
                 .serviceConfiguration(S3Configuration.builder()
                         .checksumValidationEnabled(false).build())
-//                .sigv4aSigningRegionSet()
                 .forcePathStyle(true)
                 .build();
     }
 
+    // TODO: async uploading kanske funkar bättre för batch uploads? testa
 //    @Bean
 //    public S3AsyncClient r2AsyncClient() {
 //        return S3AsyncClient.builder()

@@ -17,8 +17,9 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 public class R2StorageUploadService implements StorageUploadService {
     private final S3Client r2Client;
+    // TODO: implementera async
     //    private final S3AsyncClient r2AsyncClient;
-//    private final S3TransferManager r2TransferManager;
+    //    private final S3TransferManager r2TransferManager;
     private final R2Properties r2Properties;
 
 
