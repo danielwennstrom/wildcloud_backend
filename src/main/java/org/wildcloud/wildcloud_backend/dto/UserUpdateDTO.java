@@ -18,7 +18,7 @@ public class UserUpdateDTO extends UserRegistrationDTO {
             @Email
             String email,
             String password) {
-        super(id, firstName, lastName, phoneNumber, email, password);
+        super(firstName, lastName, phoneNumber, email, password);
     }
 
 }

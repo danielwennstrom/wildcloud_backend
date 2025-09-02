@@ -1,5 +1,6 @@
 package org.wildcloud.wildcloud_backend.service.Implementations;
 
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.wildcloud.wildcloud_backend.dto.UserDTO;
@@ -24,10 +25,12 @@ public class UserServiceIMPL implements UserService {
 
     private final UserRepository userRepository;
     private final CameraRepository cameraRepository;
+    private BCryptPasswordEncoder bCryptPasswordEncoder;
 
     public UserServiceIMPL(UserRepository userRepository, CameraRepository cameraRepository) {
         this.userRepository = userRepository;
         this.cameraRepository = cameraRepository;
+        this.bCryptPasswordEncoder = new BCryptPasswordEncoder(12);
     }
 
     @Override
@@ -88,11 +91,14 @@ public class UserServiceIMPL implements UserService {
                 .build();
     }
 
-    //TODO: Returna inte objektet utan bara en bekräftelse att användaren är skapad.
     @Override
     public UserRegistrationDTO createUser(UserRegistrationDTO userRegistrationDTO) {
-        try {
-            if (userRepository.existsByEmail(userRegistrationDTO.getEmail()) == false) {
+
+            if (userRepository.existsByEmail(userRegistrationDTO.getEmail())) {
+                throw new RuntimeException("User with email " + userRegistrationDTO.getEmail() + " already exists");
+            }
+
+                userRegistrationDTO.setPassword(bCryptPasswordEncoder.encode(userRegistrationDTO.getPassword()));
                 UserInfo newUser = userRepository.save(UserInfo.builder()
                         .email(userRegistrationDTO.getEmail())
                         .firstName(userRegistrationDTO.getFirstName())
@@ -100,25 +106,14 @@ public class UserServiceIMPL implements UserService {
                         .phoneNumber(userRegistrationDTO.getPhoneNumber())
                         .password(userRegistrationDTO.getPassword())
                         .build());
-                return UserUpdateDTO.builder()
-                        .id(newUser.getId())
-                        .email(newUser.getEmail())
-                        .phoneNumber(newUser.getPhoneNumber())
-                        .firstName(newUser.getFirstName())
-                        .lastName(newUser.getLastName())
-                        .build();
-            }
-    } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-        throw new RuntimeException("Email already exists");
+                return userRegistrationDTO;
     }
 
     @Override
     public UserLoginDTO loginUser(UserLoginDTO userLoginRequest) {
         UserInfo userLoginInfo = userRepository.findByEmail(userLoginRequest.getEmail())
                 .orElseThrow(() -> new RuntimeException("User with email " + userLoginRequest.getEmail() + " not found"));
-        if (!userLoginInfo.getPassword().equals(userLoginRequest.getPassword())) {
+        if (!bCryptPasswordEncoder.matches(userLoginRequest.getPassword(), userLoginInfo.getPassword())) {
             throw new RuntimeException("Incorrect password");
         }
         return UserLoginDTO.builder()
@@ -151,7 +146,6 @@ public class UserServiceIMPL implements UserService {
         userRepository.save(userInfo);
 
         return (UserUpdateDTO) UserUpdateDTO.builder()
-                .id(userInfo.getId())
                 .email(userInfo.getEmail())
                 .firstName(userInfo.getFirstName())
                 .lastName(userInfo.getLastName())

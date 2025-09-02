@@ -44,7 +44,7 @@ public class UserInfo {
     @Email
     private String email;
 
-    //TODO:
+
     @Column
     @Transient
     @Email

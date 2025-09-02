@@ -11,15 +11,21 @@ import lombok.Data;
 @Builder
 public class UserRegistrationDTO{
 
-    Long id;
 
+    @NotBlank(message = "First name is required")
+    private String firstName;
 
+    @NotBlank(message = "Last name is required")
+    private String lastName;
 
-    String firstName;
-    String lastName;
-    Long phoneNumber;
+    private Long phoneNumber;
 
+    @NotBlank(message = "Email is required")
+    @Email(message = "Must be a valid email adress")
     private String email;
+
+    @NotBlank(message = "Password is required")
+    @Size(min = 5, message = "Password must contain atleast 5 characters.")
     private String password;
 
 

@@ -23,7 +23,12 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeExchange(exchanges -> exchanges
-                        .pathMatchers("/api/users/createUser", "/api/users/login", "/api/public/**").permitAll()
+                        .pathMatchers(
+                                "/api/users/createUser",
+                                "/api/users/login",
+                                "/api/public/**" ,
+                                "/api/users/getAllUsers")
+                        .permitAll()
                         .anyExchange().authenticated()
                 )
                 .httpBasic(Customizer.withDefaults());
@@ -42,7 +47,7 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+        return new BCryptPasswordEncoder(12);
     }
 }
 
