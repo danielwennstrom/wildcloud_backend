@@ -15,7 +15,7 @@ import java.util.concurrent.CompletableFuture;
 @Profile("dev")
 @RequiredArgsConstructor
 @Slf4j
-public class LocalStorageUploadService implements StorageUploadService {
+public class LocalStorageService implements StorageService {
 
     @Override
     public String uploadImage(String key, byte[] imageData, String contentType) {
@@ -39,6 +39,11 @@ public class LocalStorageUploadService implements StorageUploadService {
     @Override
     public CompletableFuture<String> uploadImageAsync(String key, byte[] imageBytes, String contentType) {
         return null;
+    }
+
+    @Override
+    public String retrieveImage(String key) {
+        return "";
     }
 }
 

@@ -11,6 +11,7 @@ import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3Configuration;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 
 import java.net.URI;
 
@@ -42,6 +43,27 @@ public class R2Config {
                 .serviceConfiguration(S3Configuration.builder()
                         .checksumValidationEnabled(false).build())
                 .forcePathStyle(true)
+                .build();
+    }
+
+    @Bean
+    @Primary
+    public S3Presigner r2Presigner() {
+        AwsBasicCredentials credentials = AwsBasicCredentials.create(
+                r2Properties.getAccessKey(), r2Properties.getSecretKey()
+        );
+
+        return S3Presigner.builder()
+                .endpointOverride(
+                        r2Properties.isUseCustomDomain()
+                                ? URI.create(r2Properties.getCustomDomain())
+                                : URI.create(r2Properties.getEndpoint()))
+                .credentialsProvider(StaticCredentialsProvider.create(
+                        credentials))
+                .region(Region.US_EAST_1)
+                .serviceConfiguration(S3Configuration.builder()
+                        .checksumValidationEnabled(false)
+                        .pathStyleAccessEnabled(true).build())
                 .build();
     }
 

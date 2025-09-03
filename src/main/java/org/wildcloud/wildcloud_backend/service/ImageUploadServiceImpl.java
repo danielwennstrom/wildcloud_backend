@@ -25,7 +25,7 @@ public class ImageUploadServiceImpl implements ImageUploadService {
     private final Map<String, ImageProcessor> processors = new ConcurrentHashMap<>();
     private final List<ImageValidator> validators;
     private final ImageRepository imageRepository;
-    private final StorageUploadService storageUploadService;
+    private final StorageService storageService;
     // TODO: implementera events, kan användas till notifications etc.
 //    private final ApplicationEventPublisher eventPublisher;
 
@@ -62,7 +62,7 @@ public class ImageUploadServiceImpl implements ImageUploadService {
 
         for (ImageUploadData data : imageDataList) {
             String imageKey = buildImageKey(data);
-            storageUploadService.uploadImage(imageKey, data.getBuffer(), data.getFileMetadata().getContentType());
+            storageService.uploadImage(imageKey, data.getBuffer(), data.getFileMetadata().getContentType());
 
             ImageEntity imageEntity = ImageEntity.builder()
                     .userId(data.getUserId())

@@ -13,6 +13,7 @@ public class R2Properties {
     private String secretKey;
     private String bucketName;
     private String endpoint;
-    // Ifall vi vill ha en egen domän i framtiden
-//    private String customDomain;
+    // TODO: implementera worker i cloudflare
+    private boolean useCustomDomain;
+    private String customDomain;
 }

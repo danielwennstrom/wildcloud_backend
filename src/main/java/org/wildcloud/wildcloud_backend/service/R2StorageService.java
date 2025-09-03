@@ -7,16 +7,22 @@ import org.springframework.stereotype.Service;
 import org.wildcloud.wildcloud_backend.config.R2Properties;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
+import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
 
+import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 
 @Service
 @Profile("prod")
 @RequiredArgsConstructor
 @Slf4j
-public class R2StorageUploadService implements StorageUploadService {
+public class R2StorageService implements StorageService {
     private final S3Client r2Client;
+    private final S3Presigner r2Presigner;
     // TODO: implementera async
     //    private final S3AsyncClient r2AsyncClient;
     //    private final S3TransferManager r2TransferManager;
@@ -47,10 +53,35 @@ public class R2StorageUploadService implements StorageUploadService {
         return null;
     }
 
+    @Override
+    public String retrieveImage(String key) {
+        return generateSignedUrl(key, Duration.ofSeconds(300));
+    }
+
     private String buildImageUrl(String key) {
         return String.format("https://%s.r2.cloudflarestorage.com/%s/%s",
                 r2Properties.getAccountId(),
                 r2Properties.getBucketName(),
                 key);
+    }
+
+    private String generateSignedUrl(String imageKey, Duration expiration) {
+        try {
+            GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                    .bucket(r2Properties.getBucketName())
+                    .key(imageKey)
+                    .build();
+            GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
+                    .signatureDuration(expiration)
+                    .getObjectRequest(getObjectRequest)
+                    .build();
+
+            PresignedGetObjectRequest presignedRequest = r2Presigner.presignGetObject(presignRequest);
+
+            return presignedRequest.url().toString();
+        } catch (Exception e) {
+            log.error("Failed to generate signed URL for image: {}", imageKey, e);
+            throw new RuntimeException("Signed URL generation failed", e);
+        }
     }
 }
