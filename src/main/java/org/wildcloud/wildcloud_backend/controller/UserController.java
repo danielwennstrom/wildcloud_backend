@@ -23,22 +23,23 @@ import java.util.Set;
 @RequestMapping("/api/users")
 public class UserController {
 
+
+    @Autowired
+    private UserService userService;
+
+
     @PostMapping("/createUser")
     public ResponseEntity<UserRegistrationDTO> createUser(@Valid @RequestBody UserRegistrationDTO userRegistrationRequest) {
         UserRegistrationDTO userCreated = userService.createUser(userRegistrationRequest);
-
-            return ResponseEntity.ok(userCreated);
+        return ResponseEntity.ok(userCreated);
     }
 
     @PostMapping("/login")
     public ResponseEntity<UserLoginDTO> loginUser(@Valid @RequestBody UserLoginDTO userLoginRequest) {
         UserLoginDTO userLoginResponse = userService.loginUser(userLoginRequest);
-        if (userLoginResponse != null) {
-            return ResponseEntity.ok(userLoginResponse);
-        } else {
-            return ResponseEntity.status(401).build();
-        }
+        return ResponseEntity.ok(userLoginResponse);
     }
+
 
     @GetMapping("/getAllUsers")
     public ResponseEntity<List<UserDTO>> getAllUsers() {
@@ -46,23 +47,15 @@ public class UserController {
         return ResponseEntity.ok(users);
     }
 
-    @Autowired
-    private UserService userService;
-
     @PostMapping("/{userId}/cameras/{cameraEmail}")
     public ResponseEntity<String> addCameraToUser(@PathVariable Long userId,@PathVariable String cameraEmail ) {
-        userService.addCameraToUser(userId, cameraEmail);
-        return ResponseEntity.ok("Camera added to user successfully");
-
-    }
+        userService.addCameraToUser(userId, cameraEmail);                            // todo: change cameraEmail PathVariable to RequestBody
+        return ResponseEntity.ok("Camera added to user successfully");          // and then call on a CameraService to add camera and then
+    }                                                                                  // userService to add camera to user
 
     @GetMapping("/{userId}/cameras")
     public ResponseEntity<Set<String>> getCamerasByUserId(@PathVariable Long userId) {
         Set<String> cameras = userService.getCamerasByUserId(userId);
         return ResponseEntity.ok(cameras);
     }
-
-
-
-
 }

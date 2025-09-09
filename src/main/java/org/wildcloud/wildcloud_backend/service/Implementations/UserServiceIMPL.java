@@ -9,6 +9,9 @@ import org.wildcloud.wildcloud_backend.dto.UserRegistrationDTO;
 import org.wildcloud.wildcloud_backend.dto.UserUpdateDTO;
 import org.wildcloud.wildcloud_backend.entity.CameraInfo;
 import org.wildcloud.wildcloud_backend.entity.UserInfo;
+import org.wildcloud.wildcloud_backend.exception.custom.EmailTakenException;
+import org.wildcloud.wildcloud_backend.exception.custom.InvalidCredentialsException;
+import org.wildcloud.wildcloud_backend.exception.custom.UserNotFoundException;
 import org.wildcloud.wildcloud_backend.repository.CameraRepository;
 import org.wildcloud.wildcloud_backend.repository.UserRepository;
 import org.wildcloud.wildcloud_backend.service.UserService;
@@ -96,31 +99,31 @@ public class UserServiceIMPL implements UserService {
     @Override
     public UserRegistrationDTO createUser(UserRegistrationDTO userRegistrationDTO) {
 
-            if (userRepository.existsByEmail(userRegistrationDTO.getEmail())) {
-                throw new RuntimeException("User with email " + userRegistrationDTO.getEmail() + " already exists");
-            }
+        if (userRepository.existsByEmail(userRegistrationDTO.getEmail())) {
+            throw new EmailTakenException("User with email " + userRegistrationDTO.getEmail() + " already exists");
+        }
 
-                userRegistrationDTO.setPassword(bCryptPasswordEncoder.encode(userRegistrationDTO.getPassword()));
-                UserInfo newUser = userRepository.save(UserInfo.builder()
+        userRegistrationDTO.setPassword(bCryptPasswordEncoder.encode(userRegistrationDTO.getPassword()));
+        UserInfo newUser = userRepository.save(UserInfo.builder()
                         .email(userRegistrationDTO.getEmail())
                         .firstName(userRegistrationDTO.getFirstName())
                         .lastName(userRegistrationDTO.getLastName())
                         .phoneNumber(userRegistrationDTO.getPhoneNumber())
                         .password(userRegistrationDTO.getPassword())
                         .build());
-                return userRegistrationDTO;
+        return userRegistrationDTO;
     }
 
     @Override
     public UserLoginDTO loginUser(UserLoginDTO userLoginRequest) {
         UserInfo userLoginInfo = userRepository.findByEmail(userLoginRequest.getEmail())
-                .orElseThrow(() -> new RuntimeException("User with email " + userLoginRequest.getEmail() + " not found"));
+                .orElseThrow(() -> new UserNotFoundException("User with email " + userLoginRequest.getEmail() + " not found"));
         if (!bCryptPasswordEncoder.matches(userLoginRequest.getPassword(), userLoginInfo.getPassword())) {
-            throw new RuntimeException("Incorrect password");
+            throw new InvalidCredentialsException("Incorrect password");
         }
         return UserLoginDTO.builder()
-                .email(userLoginRequest.getEmail()).
-        build();
+                .email(userLoginRequest.getEmail())
+                .build();
     }
 
     @Override
