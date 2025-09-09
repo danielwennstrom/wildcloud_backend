@@ -4,8 +4,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.wildcloud.wildcloud_backend.exception.custom.InvalidCredentialsException;
-import org.wildcloud.wildcloud_backend.exception.custom.UserNotFoundException;
+import org.wildcloud.wildcloud_backend.exception.custom.*;
 
 import java.time.Instant;
 import java.util.Map;
@@ -18,8 +17,18 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
-    @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleEmailTaken(UserNotFoundException ex) {
+    @ExceptionHandler(CameraNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleCameraNotFoundException(CameraNotFoundException ex) {
+        return buildResponse(HttpStatus.UNAUTHORIZED, ex.getMessage());
+    }
+
+    @ExceptionHandler(PhoneNumberNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handlePhoneNumberNotFoundException(PhoneNumberNotFoundException ex) {
+        return buildResponse(HttpStatus.UNAUTHORIZED, ex.getMessage());
+    }
+
+    @ExceptionHandler(EmailTakenException.class)
+    public ResponseEntity<Map<String, Object>> handleEmailTaken(EmailTakenException ex) {
         return buildResponse(HttpStatus.CONFLICT, ex.getMessage());
     }
 
@@ -28,11 +37,20 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.UNAUTHORIZED, ex.getMessage());
     }
 
+    @ExceptionHandler(CameraNotAssociatedWithUserException.class)
+    public ResponseEntity<Map<String, Object>> handleICameraNotAssociatedWithUserException(CameraNotAssociatedWithUserException ex) {
+        return buildResponse(HttpStatus.UNAUTHORIZED, ex.getMessage());
+    }
+
+    @ExceptionHandler(UserAlreadyOwnsException.class)
+    public ResponseEntity<Map<String, Object>> handleUserAlreadyOwnsException(UserAlreadyOwnsException ex) {
+        return buildResponse(HttpStatus.UNAUTHORIZED, ex.getMessage());
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleOtherExceptions(Exception ex) {
         return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred");
     }
-
 
     private ResponseEntity<Map<String, Object>> buildResponse(HttpStatus status, String message) {
         return ResponseEntity.status(status)

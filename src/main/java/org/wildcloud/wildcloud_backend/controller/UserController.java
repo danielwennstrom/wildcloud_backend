@@ -7,7 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.wildcloud.wildcloud_backend.dto.UserDTO;
 import org.wildcloud.wildcloud_backend.dto.UserLoginDTO;
-import org.wildcloud.wildcloud_backend.dto.UserRegistrationDTO;
+import org.wildcloud.wildcloud_backend.dto.UserRequestDTO;
 import org.wildcloud.wildcloud_backend.entity.CameraInfo;
 import org.wildcloud.wildcloud_backend.service.UserService;
 
@@ -29,14 +29,14 @@ public class UserController {
 
 
     @PostMapping("/createUser")
-    public ResponseEntity<UserRegistrationDTO> createUser(@Valid @RequestBody UserRegistrationDTO userRegistrationRequest) {
-        UserRegistrationDTO userCreated = userService.createUser(userRegistrationRequest);
+    public ResponseEntity<UserDTO> createUser(@Valid @RequestBody UserRequestDTO userRequestDTO) {
+        UserDTO userCreated = userService.createUser(userRequestDTO);
         return ResponseEntity.ok(userCreated);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<UserLoginDTO> loginUser(@Valid @RequestBody UserLoginDTO userLoginRequest) {
-        UserLoginDTO userLoginResponse = userService.loginUser(userLoginRequest);
+    public ResponseEntity<UserDTO> loginUser(@Valid @RequestBody UserLoginDTO userLoginDTO) {
+        UserDTO userLoginResponse = userService.loginUser(userLoginDTO);
         return ResponseEntity.ok(userLoginResponse);
     }
 
@@ -48,14 +48,15 @@ public class UserController {
     }
 
     @PostMapping("/{userId}/cameras/{cameraEmail}")
-    public ResponseEntity<String> addCameraToUser(@PathVariable Long userId,@PathVariable String cameraEmail ) {
-        userService.addCameraToUser(userId, cameraEmail);                            // todo: change cameraEmail PathVariable to RequestBody
-        return ResponseEntity.ok("Camera added to user successfully");          // and then call on a CameraService to add camera and then
-    }                                                                                  // userService to add camera to user
+    public ResponseEntity<UserDTO> addCameraToUser(@PathVariable Long userId,
+                                                  @RequestBody CameraInfo cameraInfo) {
+        //cameraService.addCamera(cameraInfo);
+        return ResponseEntity.ok(userService.addCameraToUser(userId, cameraInfo.getCameraEmail()));
+    } // todo: uncomment line when camera service is implemented
 
     @GetMapping("/{userId}/cameras")
-    public ResponseEntity<Set<String>> getCamerasByUserId(@PathVariable Long userId) {
-        Set<String> cameras = userService.getCamerasByUserId(userId);
+    public ResponseEntity<Set<CameraInfo>> getCamerasByUserId(@PathVariable Long userId) {
+        Set<CameraInfo> cameras = userService.getCamerasByUserId(userId);
         return ResponseEntity.ok(cameras);
     }
 }

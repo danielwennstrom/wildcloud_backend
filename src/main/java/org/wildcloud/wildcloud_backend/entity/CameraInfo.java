@@ -28,9 +28,4 @@ public class CameraInfo {
 
     @ManyToMany(mappedBy = "cameras" )
     private Set<UserInfo> users = new HashSet<>();
-
-
-
-
-
 }

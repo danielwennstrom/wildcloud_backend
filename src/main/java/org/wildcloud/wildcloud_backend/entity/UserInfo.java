@@ -1,12 +1,8 @@
 package org.wildcloud.wildcloud_backend.entity;
 
-
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import lombok.*;
-import org.springframework.validation.annotation.Validated;
-
-import java.awt.*;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -23,6 +19,22 @@ public class UserInfo {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Email
+    @Column(name = "user_email", unique = true, nullable = false, length = 100)
+    private String email;
+
+    @Column(nullable = false)
+    private String password;
+
+    @Column
+    private String firstName;
+
+    @Column
+    private String lastName;
+
+    @Column
+    private Long phoneNumber;
+
     @ManyToMany
     @JoinTable(
             name = "user_camera",
@@ -31,30 +43,6 @@ public class UserInfo {
     )
     private Set<CameraInfo> cameras = new HashSet<>();
 
-
-    @Column
-    private String firstName;
-    @Column
-    private String lastName;
-
-    @Column
-    private Long phoneNumber;
-
-    @Column(name = "user_email", unique = true, nullable = false, length = 100)
-    @Email
-    private String email;
-
-
-    @Column
-    @Transient
-    @Email
-    private String cameraEmail; //Email för kameror som användaren har tillgång till.
-
-
-
-
-    @Column(nullable = false)
-    private String password;
 
     @Override
     public String toString() {
@@ -67,10 +55,4 @@ public class UserInfo {
                 ", password='" + password + '\'' +
                 '}';
     }
-
-
-
-
-
-
 }

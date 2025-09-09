@@ -13,7 +13,4 @@ public interface CameraRepository  extends JpaRepository<CameraInfo, String> {
 
     Optional<CameraInfo> findByCameraEmail(String cameraEmail);
     boolean existsByCameraEmail(String email);
-    List<CameraInfo> findAll();
-
-
 }
