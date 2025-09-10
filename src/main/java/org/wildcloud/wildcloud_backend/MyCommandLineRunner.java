@@ -1,0 +1,52 @@
+package org.wildcloud.wildcloud_backend;
+
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+import org.wildcloud.wildcloud_backend.entity.UserInfo;
+import org.wildcloud.wildcloud_backend.repository.UserRepository;
+
+@Component
+public class MyCommandLineRunner implements CommandLineRunner {
+
+    private static final Logger logger = LoggerFactory.getLogger(MyCommandLineRunner.class);
+    private final UserRepository userRepository;
+
+    public MyCommandLineRunner(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
+    @Override
+    public void run(String... args) throws Exception {
+        logger.info("Starting application, and some tests...");
+
+        UserInfo newUser = UserInfo.builder()
+                .email("test1@test.se")
+                .password("admin1")
+                .firstName("Test")
+                .lastName("User")
+                .phoneNumber(1234567890L)
+                .build();
+
+        if (userRepository.findByEmail(newUser.getEmail()).isEmpty()) {
+            UserInfo savedUser = userRepository.save(newUser); // Save the user to the database
+            logger.info("User added successfully: {}", savedUser);
+        } else {
+            logger.warn("User with email {} already exists!", newUser.getEmail());
+        }
+
+
+        logger.info("Current users in the database:");
+        userRepository.findAll().forEach(user -> logger.info(user.toString()));
+        userRepository.findById(1L);
+        logger.info("Tests completed.");
+
+    }
+
+
+
+
+
+}
