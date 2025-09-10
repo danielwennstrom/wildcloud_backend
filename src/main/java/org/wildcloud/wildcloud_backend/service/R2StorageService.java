@@ -14,7 +14,6 @@ import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignReques
 import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
 
 import java.time.Duration;
-import java.util.concurrent.CompletableFuture;
 
 @Service
 @Profile("prod")
@@ -48,10 +47,10 @@ public class R2StorageService implements StorageService {
         }
     }
 
-    @Override
-    public CompletableFuture<String> uploadImageAsync(String key, byte[] imageBytes, String contentType) {
-        return null;
-    }
+//    @Override
+//    public CompletableFuture<String> uploadImageAsync(String key, byte[] imageBytes, String contentType) {
+//        return null;
+//    }
 
     @Override
     public String retrieveImage(String key) {

@@ -2,6 +2,8 @@ package org.wildcloud.wildcloud_backend.model;
 
 import lombok.Builder;
 import lombok.Data;
+import org.wildcloud.wildcloud_backend.entity.FileMetadata;
+import org.wildcloud.wildcloud_backend.entity.ImageMetadata;
 
 import java.util.Map;
 

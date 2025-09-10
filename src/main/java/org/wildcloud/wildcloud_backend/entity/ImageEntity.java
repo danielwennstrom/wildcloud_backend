@@ -8,8 +8,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
-import org.wildcloud.wildcloud_backend.model.FileMetadata;
-import org.wildcloud.wildcloud_backend.model.ImageMetadata;
 
 import java.util.Map;
 

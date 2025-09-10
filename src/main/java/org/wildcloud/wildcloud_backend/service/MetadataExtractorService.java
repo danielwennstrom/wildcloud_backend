@@ -3,8 +3,8 @@ package org.wildcloud.wildcloud_backend.service;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.stereotype.Service;
 import org.wildcloud.wildcloud_backend.domain.FileAdapter;
-import org.wildcloud.wildcloud_backend.model.FileMetadata;
-import org.wildcloud.wildcloud_backend.model.ImageMetadata;
+import org.wildcloud.wildcloud_backend.entity.FileMetadata;
+import org.wildcloud.wildcloud_backend.entity.ImageMetadata;
 import org.wildcloud.wildcloud_backend.util.ExifUtils;
 
 import java.io.ByteArrayInputStream;
