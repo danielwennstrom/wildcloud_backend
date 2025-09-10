@@ -11,6 +11,5 @@ import java.util.Set;
 @Repository
 public interface CameraRepository  extends JpaRepository<CameraInfo, String> {
 
-    Optional<CameraInfo> findByCameraEmail(String cameraEmail);
     boolean existsByCameraEmail(String email);
 }

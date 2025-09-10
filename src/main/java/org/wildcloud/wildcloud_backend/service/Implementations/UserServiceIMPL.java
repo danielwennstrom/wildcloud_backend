@@ -192,7 +192,7 @@ public class UserServiceIMPL implements UserService {
     }
 
     private CameraInfo cameraExistsCheck(String cameraEmail) {
-        return cameraRepository.findByCameraEmail(cameraEmail)
+        return cameraRepository.findById(cameraEmail)
                 .orElseThrow(() -> new CameraNotFoundException("Camera not found"));
     }
 }
