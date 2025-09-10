@@ -24,7 +24,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(PhoneNumberNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handlePhoneNumberNotFoundException(PhoneNumberNotFoundException ex) {
-        return buildResponse(HttpStatus.UNAUTHORIZED, ex.getMessage());
+        return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
     @ExceptionHandler(EmailTakenException.class)

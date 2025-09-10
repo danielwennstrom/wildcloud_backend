@@ -28,7 +28,6 @@ public class MyCommandLineRunner implements CommandLineRunner {
                 .firstName("Test")
                 .lastName("User")
                 .phoneNumber(1234567890L)
-                .cameraEmail("cameraemail@test.se")
                 .build();
 
         if (userRepository.findByEmail(newUser.getEmail()).isEmpty()) {

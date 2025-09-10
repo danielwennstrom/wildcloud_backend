@@ -27,7 +27,9 @@ public class SecurityConfig {
                                 "/api/users/createUser",
                                 "/api/users/login",
                                 "/api/public/**" ,
-                                "/api/users/getAllUsers")
+                                "/api/users/getAllUsers",
+                                "/api/users/deleteUser/{userId}",
+                                "/api/users/updateUser/{userId}")
                         .permitAll()
                         .anyExchange().authenticated()
                 )

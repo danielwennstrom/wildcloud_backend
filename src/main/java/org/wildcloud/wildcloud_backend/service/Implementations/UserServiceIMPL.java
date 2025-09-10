@@ -62,7 +62,7 @@ public class UserServiceIMPL implements UserService {
     }
 
     @Override
-    public UserDTO createUser(UserRequestDTO userRequestDTO) {
+    public UserDTO registerUser(UserRequestDTO userRequestDTO) {
 
         if (userRepository.existsByEmail(userRequestDTO.getEmail())) {
             throw new EmailTakenException("User with email " + userRequestDTO.getEmail() + " already exists");
@@ -153,7 +153,7 @@ public class UserServiceIMPL implements UserService {
 
     @Override
     @Transactional
-    public void deleteCameraFromUser(Long userId, String cameraEmail) {
+    public void removeCameraFromUser(Long userId, String cameraEmail) {
         UserInfo userInfo = userExistsCheck(userId);
         CameraInfo camera = cameraExistsCheck(cameraEmail);
 
@@ -165,11 +165,9 @@ public class UserServiceIMPL implements UserService {
     }
 
     @Override
-    public void deleteUser(Long id) {
-        if (!userRepository.existsById(id)) {
-            throw new RuntimeException("User with id " + id + " does not exist");
-        }
-        userRepository.deleteById(id);
+    public void deleteUser(Long userId) {
+        userExistsCheck(userId);
+        userRepository.deleteById(userId);
     }
 
 

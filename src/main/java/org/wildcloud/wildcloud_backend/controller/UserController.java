@@ -27,10 +27,11 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    // User Endpoints
 
     @PostMapping("/createUser")
-    public ResponseEntity<UserDTO> createUser(@Valid @RequestBody UserRequestDTO userRequestDTO) {
-        UserDTO userCreated = userService.createUser(userRequestDTO);
+    public ResponseEntity<UserDTO> registerUser(@Valid @RequestBody UserRequestDTO userRequestDTO) {
+        UserDTO userCreated = userService.registerUser(userRequestDTO);
         return ResponseEntity.ok(userCreated);
     }
 
@@ -40,12 +41,28 @@ public class UserController {
         return ResponseEntity.ok(userLoginResponse);
     }
 
-
     @GetMapping("/getAllUsers")
     public ResponseEntity<List<UserDTO>> getAllUsers() {
         List<UserDTO> users = userService.findAll();
         return ResponseEntity.ok(users);
     }
+
+    @DeleteMapping("/deleteUser/{userId}")
+    public ResponseEntity<Boolean> deleteUser(@PathVariable Long userId) {
+        userService.deleteUser(userId);
+        return ResponseEntity.ok(true);
+    }
+
+    @PostMapping("/updateUser/{userId}")
+    public ResponseEntity<UserDTO> updateUser(@Valid @RequestBody UserRequestDTO userRequestDTO, @PathVariable Long userId) {
+        UserDTO updatedCreated = userService.updateUser(userRequestDTO,userId);
+        return ResponseEntity.ok(updatedCreated);
+    }
+
+
+    // todo: log out endpoint
+
+    // Camera Endpoints
 
     @PostMapping("/{userId}/cameras/{cameraEmail}")
     public ResponseEntity<UserDTO> addCameraToUser(@PathVariable Long userId,
@@ -59,4 +76,6 @@ public class UserController {
         Set<CameraInfo> cameras = userService.getCamerasByUserId(userId);
         return ResponseEntity.ok(cameras);
     }
+
+
 }

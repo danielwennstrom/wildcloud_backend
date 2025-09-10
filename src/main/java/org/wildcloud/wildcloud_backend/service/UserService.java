@@ -14,11 +14,11 @@ public interface UserService {
     UserDTO findById(Long userId);
     UserDTO findByEmail(String email);
     UserDTO findByPhoneNumber(Long phoneNumber);
-    UserDTO createUser(UserRequestDTO userCompleteDTO);
+    UserDTO registerUser(UserRequestDTO userCompleteDTO);
     UserDTO loginUser(UserLoginDTO userLoginRequest);
     UserDTO updateUser(UserRequestDTO userCompleteDTO, Long userId);
     UserDTO addCameraToUser(Long userId, String cameraEmail);
     Set<CameraInfo> getCamerasByUserId(Long userId);
-    void deleteCameraFromUser(Long userId, String cameraEmail);
-    void deleteUser(Long id);
+    void removeCameraFromUser(Long userId, String cameraEmail);
+    void deleteUser(Long userId);
 }
