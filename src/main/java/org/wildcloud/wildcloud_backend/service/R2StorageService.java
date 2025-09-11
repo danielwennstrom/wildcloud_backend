@@ -16,7 +16,7 @@ import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequ
 import java.time.Duration;
 
 @Service
-@Profile("prod")
+@Profile("production")
 @RequiredArgsConstructor
 @Slf4j
 public class R2StorageService implements StorageService {

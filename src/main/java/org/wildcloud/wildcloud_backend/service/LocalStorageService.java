@@ -11,7 +11,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 @Service
-@Profile("dev")
+@Profile("development")
 @RequiredArgsConstructor
 @Slf4j
 public class LocalStorageService implements StorageService {
