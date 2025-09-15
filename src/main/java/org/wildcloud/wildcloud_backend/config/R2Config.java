@@ -22,10 +22,6 @@ import java.net.URI;
 public class R2Config {
     private final R2Properties r2Properties;
 
-    //    
-//    @Bean
-//    @Primary
-//    public S3Client 
     @Bean
     @Primary
     public S3Client r2Client() {
