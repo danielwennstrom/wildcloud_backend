@@ -20,6 +20,7 @@ import java.util.Set;
 //              !!!!!!!!!!!!!OBS!!!!!!!!!!!
 
 @RestController
+@CrossOrigin(origins = "http://localhost:8081")
 @RequestMapping("/api/users")
 public class UserController {
 
