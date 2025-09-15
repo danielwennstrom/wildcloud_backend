@@ -2,12 +2,14 @@ package org.wildcloud.wildcloud_backend.request;
 
 import lombok.Builder;
 import lombok.Data;
-import org.springframework.web.multipart.MultipartFile;
+import org.wildcloud.wildcloud_backend.domain.FileAdapter;
+
+import java.util.List;
 
 @Data
 @Builder
 public class DirectUploadRequest {
     private String userId;
     private String cameraId;
-    private MultipartFile[] files;
+    private List<FileAdapter> files;
 }
