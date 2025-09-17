@@ -5,6 +5,13 @@ import org.wildcloud.wildcloud_backend.model.ImageUploadData;
 
 import java.util.List;
 
+/**
+ * Strategy interface for processing image uploads from various implemented sources.
+ * Responsible for taking input data from implemented sources, extracting image bytes and metadata,
+ * and converting it into a standardized format, {@link ImageUploadData}.
+ *
+ * @see DirectUploadProcessor for an example implementation.
+ */
 public interface ImageProcessor {
     List<ImageUploadData> process(Object inputData) throws ProcessException;
 }
