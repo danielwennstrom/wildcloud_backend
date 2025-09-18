@@ -9,7 +9,7 @@ import org.wildcloud.wildcloud_backend.entity.ImageMetadata;
 import org.wildcloud.wildcloud_backend.exception.ProcessException;
 import org.wildcloud.wildcloud_backend.model.ImageUploadData;
 import org.wildcloud.wildcloud_backend.request.DirectUploadRequest;
-import org.wildcloud.wildcloud_backend.service.MetadataExtractorService;
+import org.wildcloud.wildcloud_backend.service.metadata.MetadataService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,7 +19,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Slf4j
 public class DirectUploadProcessor implements ImageProcessor {
-    private final MetadataExtractorService metadataExtractorService;
+    private final MetadataService metadataService;
 
     @Override
     public List<ImageUploadData> process(Object inputData) throws ProcessException {
@@ -34,8 +34,8 @@ public class DirectUploadProcessor implements ImageProcessor {
                 log.debug("Processing file: name={}, size={} bytes",
                         file.getOriginalFilename(), file.getSize());
 
-                FileMetadata fileMetadata = metadataExtractorService.extractFileMetadata(file);
-                ImageMetadata imageMetadata = metadataExtractorService.extractImageMetadata(file);
+                FileMetadata fileMetadata = metadataService.extractFileMetadata(file);
+                ImageMetadata imageMetadata = metadataService.extractImageMetadata(file);
 
                 ImageUploadData imageData = ImageUploadData.builder()
                         .userId(request.getUserId())
