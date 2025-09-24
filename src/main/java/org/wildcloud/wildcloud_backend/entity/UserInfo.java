@@ -1,29 +1,34 @@
 package org.wildcloud.wildcloud_backend.entity;
 
-import jakarta.persistence.*;
+
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
+
 import java.util.HashSet;
 import java.util.Set;
 
 
-@Entity
 @Data
-@Table(name = "user_info")
+@Table("user_info")
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserInfo {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Email
-    @Column(name = "user_email", unique = true, nullable = false, length = 100)
+    @NotNull
+    @Column("user_email")
     private String email;
 
-    @Column(nullable = false)
+    @NotNull
+    @Column("password")
     private String password;
 
     @Column
@@ -35,13 +40,6 @@ public class UserInfo {
     @Column
     private Long phoneNumber;
 
-    @ManyToMany
-    @JoinTable(
-            name = "user_camera",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "camera_email")
-    )
-    private Set<CameraInfo> cameras = new HashSet<>();
 
 
     @Override

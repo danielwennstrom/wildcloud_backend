@@ -3,22 +3,20 @@ package org.wildcloud.wildcloud_backend.service;
 import org.wildcloud.wildcloud_backend.dto.UserDTO;
 import org.wildcloud.wildcloud_backend.dto.UserLoginDTO;
 import org.wildcloud.wildcloud_backend.dto.UserRequestDTO;
-import org.wildcloud.wildcloud_backend.entity.CameraInfo;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
-import java.util.List;
 import java.util.Set;
 
 public interface UserService {
 
-    List<UserDTO> findAll();
-    UserDTO findById(Long userId);
-    UserDTO findByEmail(String email);
-    UserDTO findByPhoneNumber(Long phoneNumber);
-    UserDTO registerUser(UserRequestDTO userCompleteDTO);
-    UserDTO loginUser(UserLoginDTO userLoginRequest);
-    UserDTO updateUser(UserRequestDTO userCompleteDTO, Long userId);
-    UserDTO addCameraToUser(Long userId, String cameraEmail);
-    Set<CameraInfo> getCamerasByUserId(Long userId);
-    void removeCameraFromUser(Long userId, String cameraEmail);
-    void deleteUser(Long userId);
+    Flux<UserDTO> findAll();
+    Mono<UserDTO> findById(Long userId);
+    Mono<UserDTO> findByEmail(String email);
+    Mono<UserDTO> findByPhoneNumber(Long phoneNumber);
+    Mono<UserDTO> registerUser(UserRequestDTO userCompleteDTO);
+    Mono<UserDTO> loginUser(UserLoginDTO userLoginDTO);
+    Mono<UserDTO> updateUser(UserRequestDTO userCompleteDTO, Long userId);
+    Mono<Void> deleteUser(Long userId);
+
 }
