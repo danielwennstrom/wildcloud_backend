@@ -2,49 +2,58 @@ package org.wildcloud.wildcloud_backend.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.Customizer;
-import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
+import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
-import org.springframework.security.web.server.SecurityWebFilterChain;
-import org.springframework.security.core.userdetails.MapReactiveUserDetailsService;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.security.web.server.context.NoOpServerSecurityContextRepository;
 
-@EnableWebFluxSecurity
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.web.server.WebFilter;
+
 @Configuration
-@EnableReactiveMethodSecurity
+@EnableWebFluxSecurity
 public class SecurityConfig {
+
+    private static final Logger logger = LoggerFactory.getLogger(SecurityConfig.class);
+
 
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
-        http
-                .csrf(csrf -> csrf.disable())
+
+        return http
+                .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .authorizeExchange(exchanges -> exchanges
-                        .pathMatchers(
-                                "/api/users/createUser",
-                                "/api/users/login",
-                                "/api/public/**" ,
-                                "/api/users/getAllUsers",
-                                "/api/users/deleteUser/{userId}",
-                                "/api/users/updateUser/{userId}")
-                        .permitAll()
+                        .pathMatchers("/api/users/createUser" , "/api/users/login", "/api/users/getAllUsers")  /// Ta bort getAllUsers senare efter testning.
+                                .permitAll()
                         .anyExchange().authenticated()
                 )
-                .httpBasic(Customizer.withDefaults());
+                .httpBasic(httpBasic -> {})
+                .securityContextRepository(NoOpServerSecurityContextRepository.getInstance())
+                .addFilterAt(authLoggingFilter(), SecurityWebFiltersOrder.HTTP_BASIC)
+                .build();
 
-        return http.build();
     }
 
-    @Bean
-    public MapReactiveUserDetailsService userDetailsService(PasswordEncoder passwordEncoder) {
-        UserDetails user = User.withUsername("user")
-                .password(passwordEncoder.encode("password"))
-                .roles("USER")
-                .build();
-        return new MapReactiveUserDetailsService(user);
+    public WebFilter authLoggingFilter() {
+
+        return (exchange, chain) -> {
+            String path = exchange.getRequest().getPath().value();
+            String method = exchange.getRequest().getMethod().name();
+            logger.debug("Working on request: {} {}", method, path);
+
+            String authHeader = exchange.getRequest().getHeaders().getFirst("Authorization");
+            if (authHeader != null && authHeader.startsWith("Basic ")) {
+                logger.debug("Authorization header present");
+            } else {
+
+                logger.debug("No Authorization header present: {}", authHeader);
+            }
+            return chain.filter(exchange);
+        };
     }
 
     @Bean
@@ -52,3 +61,4 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder(12);
     }
 }
+

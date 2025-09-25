@@ -1,31 +1,37 @@
 package org.wildcloud.wildcloud_backend.entity;
 
 
-import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
 import org.springframework.validation.annotation.Validated;
 
 import java.util.HashSet;
 import java.util.Set;
 
-@Entity
+
 @Data
+@Table("camera_info")
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Validated
-@Table(name = "camera_info")
 public class CameraInfo {
 
     @Id
-    @Column(unique = true, nullable = false, length = 100)
-    @Email
+    @Column("camera_email")
     private String cameraEmail;
 
-    @ManyToMany(mappedBy = "cameras" )
-    private Set<UserInfo> users = new HashSet<>();
+    @Column
+    private Long cameraId;
+
+    @Column
+    private Long userId;
+
+
 }
