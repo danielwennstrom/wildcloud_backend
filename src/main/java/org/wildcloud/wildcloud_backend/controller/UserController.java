@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.wildcloud.wildcloud_backend.dto.UserDTO;
 import org.wildcloud.wildcloud_backend.dto.UserLoginDTO;
+import org.wildcloud.wildcloud_backend.dto.UserLogoutDTO;
 import org.wildcloud.wildcloud_backend.dto.UserRequestDTO;
 import org.wildcloud.wildcloud_backend.entity.CameraInfo;
 import org.wildcloud.wildcloud_backend.service.Implementations.UserServiceIMPL;
@@ -53,6 +54,18 @@ public class UserController {
     }
 
 
+
+    @PostMapping("/logout")
+    public Mono<ResponseEntity<String>> logoutUser(@RequestBody Map<String, String> request) {
+        String userEmail = request.get("userEmail");
+        return userService.logoutUser(userEmail)
+                .thenReturn(ResponseEntity.ok("User logged out successfully"))
+                .onErrorResume(e -> {
+                    System.err.println("Error logging out user: " + e.getMessage());
+                    return Mono.just(ResponseEntity.status(500).body("Error logging out user"));
+                });
+    }
+
     @GetMapping("/getAllUsers")
     public Mono<ResponseEntity<List<UserDTO>>> getAllUsers() {
         return userService.findAll()
@@ -77,7 +90,10 @@ public class UserController {
     }
 
 
-    // todo: log out endpoint
+
+    // todo: log out endpoint(tamas)
+    //todo: create new authcontroller(boti)
+    //todo: create camera thingies(tamas)
 
     // Camera Endpoints
 

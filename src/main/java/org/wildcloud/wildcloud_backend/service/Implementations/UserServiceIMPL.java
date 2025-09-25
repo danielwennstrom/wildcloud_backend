@@ -5,6 +5,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.wildcloud.wildcloud_backend.dto.UserDTO;
 import org.wildcloud.wildcloud_backend.dto.UserLoginDTO;
+import org.wildcloud.wildcloud_backend.dto.UserLogoutDTO;
 import org.wildcloud.wildcloud_backend.dto.UserRequestDTO;
 import org.wildcloud.wildcloud_backend.entity.UserInfo;
 import org.wildcloud.wildcloud_backend.exception.custom.EmailTakenException;
@@ -92,7 +93,16 @@ public class UserServiceIMPL implements UserService {
                     }
                     return Mono.just(buildUserDTO(userInfo));
                 });
+    }
 
+    @Override
+    public Mono<Void> logoutUser(String userEmail) {
+        return userRepository.findByUserEmail(userEmail)
+                .switchIfEmpty(Mono.error(new UserNotFoundException("User with email " + userEmail + " not found")))
+                .flatMap(userInfo -> {
+                    System.out.println("User " + userEmail + " logged out successfully");
+                    return Mono.empty();
+                });
     }
 
     @Override
@@ -134,6 +144,7 @@ public class UserServiceIMPL implements UserService {
                         userRepository.deleteById(userInfo.getId())
                 );
     }
+
 
 
 
