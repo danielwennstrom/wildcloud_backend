@@ -11,7 +11,7 @@ import java.util.Optional;
 @Repository
 public interface UserRepository extends  ReactiveCrudRepository <UserInfo, Long> {
 
-    Mono<UserInfo> findByEmail(String email);
-    Mono<Boolean> existsByEmail(String email);
+    Mono<UserInfo> findByUserEmail(String email);
+    Mono<Boolean> existsByUserEmail(String email);
     Mono<UserInfo> findByPhoneNumber(Long phoneNumber);
 }

@@ -46,8 +46,8 @@ public class UserServiceIMPL implements UserService {
     }
 
     @Override
-    public Mono<UserDTO> findByEmail(String email) {
-        return userRepository.findByEmail(email)
+    public Mono<UserDTO> findByUserEmail(String email) {
+        return userRepository.findByUserEmail(email)
                 .switchIfEmpty(Mono.error(new UserNotFoundException("User with email " + email + " not found")))
                 .map(this::buildUserDTO);
     }
@@ -62,20 +62,21 @@ public class UserServiceIMPL implements UserService {
     @Override
     public Mono<UserDTO> registerUser(UserRequestDTO userRequestDTO) {
 
-        return userRepository.existsByEmail(userRequestDTO.getEmail())
+        return userRepository.existsByUserEmail(userRequestDTO.getEmail())
                 .flatMap(exists -> {
                     if (Boolean.TRUE.equals(exists)) {
                         return Mono.error(new EmailTakenException("User with email " + userRequestDTO.getEmail() + " already exists"));
                     }
                     UserInfo newUser = UserInfo.builder()
-                            .email(userRequestDTO.getEmail())
+                            .userEmail(userRequestDTO.getEmail())
                             .password(passwordEncoder.encode(userRequestDTO.getPassword()))
                             .firstName(userRequestDTO.getFirstName())
                             .lastName(userRequestDTO.getLastName())
                             .phoneNumber(userRequestDTO.getPhoneNumber())
                             .build();
                     return userRepository.save(newUser)
-                            .map(this::buildUserDTO);
+                            .map(this::buildUserDTO)
+                            .doOnError(e ->System.err.println("Error saving user: " + e.getMessage()));
                 });
 
     }
@@ -83,7 +84,7 @@ public class UserServiceIMPL implements UserService {
     @Override
     public Mono<UserDTO> loginUser(UserLoginDTO userLoginDTO) {
 
-        return userRepository.findByEmail(userLoginDTO.getEmail())
+        return userRepository.findByUserEmail(userLoginDTO.getEmail())
                 .switchIfEmpty(Mono.error(new UserNotFoundException("User with email " + userLoginDTO.getEmail() + " not found")))
                 .flatMap(userInfo -> {
                     if (!passwordEncoder.matches(userLoginDTO.getPassword(), userInfo.getPassword())) {
@@ -101,13 +102,13 @@ public class UserServiceIMPL implements UserService {
         return userRepository.findById(userId)
                 .switchIfEmpty(Mono.error(new UserNotFoundException("User with id " + userId + "not found")))
                 .flatMap(userInfo -> {
-                    if (!userRequestDTO.getEmail().equals(userInfo.getEmail())) {
-                        return userRepository.findByEmail(userRequestDTO.getEmail())
+                    if (!userRequestDTO.getEmail().equals(userInfo.getUserEmail())) {
+                        return userRepository.findByUserEmail(userRequestDTO.getEmail())
                                 .flatMap(exists -> {
                                     if (Boolean.TRUE.equals(exists)) {
                                         return Mono.error(new EmailTakenException("User with email " + userRequestDTO.getEmail() + " already exists"));
                                     }
-                                    userInfo.setEmail(userRequestDTO.getEmail());
+                                    userInfo.setUserEmail(userRequestDTO.getEmail());
                                     return Mono.just(userInfo);
                                 });
                     }
@@ -143,7 +144,7 @@ public class UserServiceIMPL implements UserService {
     private UserDTO buildUserDTO(UserInfo userInfo) {
         return UserDTO.builder()
                 .id(userInfo.getId())
-                .email(userInfo.getEmail())
+                .email(userInfo.getUserEmail())
                 .phoneNumber(userInfo.getPhoneNumber())
                 .firstName(userInfo.getFirstName())
                 .lastName(userInfo.getLastName())
@@ -156,7 +157,7 @@ public class UserServiceIMPL implements UserService {
     }
 
     private Mono<UserInfo> userExistsCheck(String email) {
-        return userRepository.findByEmail(email)
+        return userRepository.findByUserEmail(email)
                 .switchIfEmpty(Mono.error(new UserNotFoundException("User with email " + email + " not found")));
     }
 }

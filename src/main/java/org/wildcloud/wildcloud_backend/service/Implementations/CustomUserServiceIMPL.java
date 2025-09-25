@@ -9,6 +9,7 @@ import reactor.core.publisher.Mono;
 public class CustomUserServiceIMPL implements ReactiveUserDetailsService {
 
 
+
     private final UserRepository userRepository;
 
     public CustomUserServiceIMPL(UserRepository userRepository) {
@@ -17,8 +18,8 @@ public class CustomUserServiceIMPL implements ReactiveUserDetailsService {
 
     @Override
     public Mono<UserDetails> findByUsername(String username) {
-        return userRepository.findByEmail(username)
-                .map(user -> User.withUsername(user.getEmail())
+        return userRepository.findByUserEmail(username)
+                .map(user -> User.withUsername(user.getUserEmail())
                         .password(user.getPassword())
                         .roles("USER")
                         .build());

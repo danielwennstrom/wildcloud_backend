@@ -25,7 +25,7 @@ public class UserInfo {
     @Email
     @NotNull
     @Column("user_email")
-    private String email;
+    private String userEmail;
 
     @NotNull
     @Column("password")
@@ -49,7 +49,7 @@ public class UserInfo {
                 ", firstName='" + firstName + '\'' +
                 ", lastName='" + lastName + '\'' +
                 ", phoneNumber=" + phoneNumber +
-                ", email='" + email + '\'' +
+                ", email='" + userEmail + '\'' +
                 ", password='" + password + '\'' +
                 '}';
     }

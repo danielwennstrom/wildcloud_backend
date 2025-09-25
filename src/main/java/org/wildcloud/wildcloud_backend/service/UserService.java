@@ -12,7 +12,7 @@ public interface UserService {
 
     Flux<UserDTO> findAll();
     Mono<UserDTO> findById(Long userId);
-    Mono<UserDTO> findByEmail(String email);
+    Mono<UserDTO> findByUserEmail(String email);
     Mono<UserDTO> findByPhoneNumber(Long phoneNumber);
     Mono<UserDTO> registerUser(UserRequestDTO userCompleteDTO);
     Mono<UserDTO> loginUser(UserLoginDTO userLoginDTO);

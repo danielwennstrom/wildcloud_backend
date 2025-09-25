@@ -14,6 +14,7 @@ import org.wildcloud.wildcloud_backend.service.UserService;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 //              !!!!!!!!!!!!!OBS!!!!!!!!!!!
@@ -35,7 +36,13 @@ public class UserController {
     @PostMapping("/createUser")
     public Mono<ResponseEntity<UserDTO>> registerUser(@Valid @RequestBody UserRequestDTO userRequestDTO) {
         return userService.registerUser(userRequestDTO)
-                .map(ResponseEntity::ok);
+                .map(ResponseEntity::ok)
+                .onErrorResume(e -> {
+                    System.err.println("Error registering user: " + e.getMessage());
+                    e.printStackTrace();
+                    return Mono.just(ResponseEntity.status(500).build());
+                })
+                .doOnSuccess(response -> System.out.println("User registered: " + userRequestDTO));
     }
 
     @PostMapping("/login")
