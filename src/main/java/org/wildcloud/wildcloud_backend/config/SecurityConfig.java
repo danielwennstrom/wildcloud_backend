@@ -1,5 +1,7 @@
 package org.wildcloud.wildcloud_backend.config;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
@@ -9,9 +11,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.security.web.server.context.NoOpServerSecurityContextRepository;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.web.server.WebFilter;
 
 @Configuration
@@ -27,15 +26,24 @@ public class SecurityConfig {
         return http
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .authorizeExchange(exchanges -> exchanges
-                        .pathMatchers("/api/users/createUser" ,
+                        .pathMatchers(
+                                "/api/users/createUser",
                                 "/api/users/login",
                                 "/api/users/getAllUsers",
+                                "/api/users/updateUser/{userEmail}",
+                                "/api/users/deleteUser/{userEmail}",
+                                "/api/users/getUserByEmail/{userEmail}",
+                                "/api/users/getUserById/{userId}",
+                                "/api/users/getUserByPhoneNumber/{phoneNumber}",
+                                "/api/users/logout/{userEmail}",
+                                "/api/cameras/updateCamera/",
                                 "/api/cameras/**")
-                        // todo: Ta bort getAllUsers/getAllCameras senare efter testning.
-                                .permitAll()
+                        // todo: Ta bort  senare efter testning.
+                        .permitAll()
                         .anyExchange().authenticated()
                 )
-                .httpBasic(httpBasic -> {})
+                .httpBasic(httpBasic -> {
+                })
                 .securityContextRepository(NoOpServerSecurityContextRepository.getInstance())
                 .addFilterAt(authLoggingFilter(), SecurityWebFiltersOrder.HTTP_BASIC)
                 .build();
@@ -64,7 +72,6 @@ public class SecurityConfig {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(12);
     }
-
 
 
 }

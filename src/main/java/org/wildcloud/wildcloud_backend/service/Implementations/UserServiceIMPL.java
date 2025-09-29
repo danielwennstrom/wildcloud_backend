@@ -1,15 +1,15 @@
 package org.wildcloud.wildcloud_backend.service.Implementations;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.wildcloud.wildcloud_backend.dto.UserDTO;
 import org.wildcloud.wildcloud_backend.dto.UserLoginDTO;
-import org.wildcloud.wildcloud_backend.dto.UserLogoutDTO;
 import org.wildcloud.wildcloud_backend.dto.UserRequestDTO;
 import org.wildcloud.wildcloud_backend.entity.UserInfo;
 import org.wildcloud.wildcloud_backend.exception.custom.EmailTakenException;
 import org.wildcloud.wildcloud_backend.exception.custom.InvalidCredentialsException;
+import org.wildcloud.wildcloud_backend.exception.custom.PasswordNotValidException;
 import org.wildcloud.wildcloud_backend.exception.custom.UserNotFoundException;
 import org.wildcloud.wildcloud_backend.repository.UserRepository;
 import org.wildcloud.wildcloud_backend.service.UserService;
@@ -17,19 +17,19 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 
-
+@Slf4j
 @Service
 public class UserServiceIMPL implements UserService {
 
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
 
-    public UserServiceIMPL(UserRepository userRepository) {
+    private final PasswordEncoder passwordEncoder;
+
+    public UserServiceIMPL(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -63,30 +63,47 @@ public class UserServiceIMPL implements UserService {
     @Override
     public Mono<UserDTO> registerUser(UserRequestDTO userRequestDTO) {
 
-        return userRepository.existsByUserEmail(userRequestDTO.getEmail())
+        log.info("Service method registerUser called with email: {}", userRequestDTO.getUserEmail());
+
+        if (userRequestDTO.getPassword() == null || userRequestDTO.getPassword().length() < 5) {
+            return Mono.error(new PasswordNotValidException("Password must be at least 5 characters long"));
+        }
+
+
+        return userRepository.existsByUserEmail(userRequestDTO.getUserEmail())
                 .flatMap(exists -> {
+                    log.info("Email check completed. Exists: {}", exists);
                     if (Boolean.TRUE.equals(exists)) {
-                        return Mono.error(new EmailTakenException("User with email " + userRequestDTO.getEmail() + " already exists"));
+                        return Mono.error(new EmailTakenException("Email already exists"));
                     }
+
+
                     UserInfo newUser = UserInfo.builder()
-                            .userEmail(userRequestDTO.getEmail())
+                            .userEmail(userRequestDTO.getUserEmail())
                             .password(passwordEncoder.encode(userRequestDTO.getPassword()))
                             .firstName(userRequestDTO.getFirstName())
                             .lastName(userRequestDTO.getLastName())
                             .phoneNumber(userRequestDTO.getPhoneNumber())
                             .build();
-                    return userRepository.save(newUser)
-                            .map(this::buildUserDTO)
-                            .doOnError(e ->System.err.println("Error saving user: " + e.getMessage()));
-                });
 
+                    log.info("Attempting to save user to database");
+                    return userRepository.save(newUser);
+                })
+                .map(savedUser -> {
+                    log.info("User saved successfully with ID: {}", savedUser.getId());
+                    return this.buildUserDTO(savedUser);
+                })
+                .onErrorMap(e -> {
+                    log.error("Error in registerUser: {}", e.getMessage(), e);
+                    return e;
+                });
     }
 
     @Override
     public Mono<UserDTO> loginUser(UserLoginDTO userLoginDTO) {
 
-        return userRepository.findByUserEmail(userLoginDTO.getEmail())
-                .switchIfEmpty(Mono.error(new UserNotFoundException("User with email " + userLoginDTO.getEmail() + " not found")))
+        return userRepository.findByUserEmail(userLoginDTO.getUserEmail())
+                .switchIfEmpty(Mono.error(new UserNotFoundException("User with email " + userLoginDTO.getUserEmail() + " not found")))
                 .flatMap(userInfo -> {
                     if (!passwordEncoder.matches(userLoginDTO.getPassword(), userInfo.getPassword())) {
                         return Mono.error(new InvalidCredentialsException("Invalid credentials"));
@@ -106,46 +123,29 @@ public class UserServiceIMPL implements UserService {
     }
 
     @Override
-    public Mono<UserDTO> updateUser(UserRequestDTO userRequestDTO, Long userId) {
+    public Mono<UserDTO> updateUser(UserRequestDTO userRequestDTO, String userEmail) {
 
 
-        return userRepository.findById(userId)
-                .switchIfEmpty(Mono.error(new UserNotFoundException("User with id " + userId + "not found")))
+        return userRepository.findByUserEmail(userEmail)
+                .switchIfEmpty(Mono.error(new UserNotFoundException("User with email " + userEmail + " not found")))
                 .flatMap(userInfo -> {
-                    if (!userRequestDTO.getEmail().equals(userInfo.getUserEmail())) {
-                        return userRepository.findByUserEmail(userRequestDTO.getEmail())
-                                .flatMap(exists -> {
-                                    if (Boolean.TRUE.equals(exists)) {
-                                        return Mono.error(new EmailTakenException("User with email " + userRequestDTO.getEmail() + " already exists"));
-                                    }
-                                    userInfo.setUserEmail(userRequestDTO.getEmail());
-                                    return Mono.just(userInfo);
-                                });
-                    }
-                    return Mono.just(userInfo);
-                })
-                .map(userInfo -> {
-                    if (!passwordEncoder.matches(userRequestDTO.getPassword(), userInfo.getPassword())) {
-                        userInfo.setPassword(passwordEncoder.encode(userRequestDTO.getPassword()));
-                    }
+                    userInfo.setUserEmail(userRequestDTO.getUserEmail());
                     userInfo.setFirstName(userRequestDTO.getFirstName());
                     userInfo.setLastName(userRequestDTO.getLastName());
                     userInfo.setPhoneNumber(userRequestDTO.getPhoneNumber());
-                    return userInfo;
-                })
-                .flatMap(userRepository::save)
-                .map(this::buildUserDTO);
+
+                    return userRepository.save(userInfo)
+                            .map(this::buildUserDTO);
+                });
     }
 
     @Override
-    public Mono<Void> deleteUser(Long userId) {
-        return userExistsCheck(userId)
+    public Mono<Void> deleteUser(String userEmail) {
+        return userExistsCheck(userEmail)
                 .flatMap(userInfo ->
                         userRepository.deleteById(userInfo.getId())
                 );
     }
-
-
 
 
     //------------------------ Camera related methods ------------------------
@@ -155,7 +155,7 @@ public class UserServiceIMPL implements UserService {
     private UserDTO buildUserDTO(UserInfo userInfo) {
         return UserDTO.builder()
                 .id(userInfo.getId())
-                .email(userInfo.getUserEmail())
+                .userEmail(userInfo.getUserEmail())
                 .phoneNumber(userInfo.getPhoneNumber())
                 .firstName(userInfo.getFirstName())
                 .lastName(userInfo.getLastName())

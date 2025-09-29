@@ -10,10 +10,6 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
-import org.springframework.validation.annotation.Validated;
-
-import java.util.HashSet;
-import java.util.Set;
 
 
 @Data
@@ -35,9 +31,6 @@ public class CameraInfo {
 
     @Column
     private String cameraName;
-
-
-
 
 
     @Override

@@ -12,9 +12,7 @@ import org.wildcloud.wildcloud_backend.dto.CameraDTO;
 import org.wildcloud.wildcloud_backend.dto.CameraRequestDTO;
 import org.wildcloud.wildcloud_backend.repository.CameraRepository;
 import org.wildcloud.wildcloud_backend.service.CameraService;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
 import java.util.List;
 
 @Slf4j
@@ -31,13 +29,19 @@ public class CameraController {
 
     @PostMapping("/createCamera")
     public Mono<ResponseEntity<CameraDTO>> registerCamera(@Valid @RequestBody CameraRequestDTO cameraRequestDTO) {
-        return cameraService.registerCamera(cameraRequestDTO)
-                .map(createdCamera -> ResponseEntity.status(HttpStatus.CREATED).body(createdCamera))
-                .doOnSuccess(success -> log.info("Camera registered: {}", cameraRequestDTO.getCameraEmail()))
-                .onErrorResume(error -> {
-                    log.error("Error registering camera: {}", error.getMessage());
-                    return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).build());
-                });
+        try {
+
+            return cameraService.registerCamera(cameraRequestDTO)
+                    .map(createdCamera -> ResponseEntity.status(HttpStatus.CREATED).body(createdCamera))
+                    .doOnSuccess(success -> log.info("Camera registered: {}", cameraRequestDTO.getCameraEmail()))
+                    .onErrorResume(error -> {
+                        log.error("Error registering camera: {}", error.getMessage());
+                        return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).build());
+                    });
+        } catch (Exception e) {
+            log.error("Unexpected error registering camera: {}", e.getMessage());
+            return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build());
+        }
 
     }
 
@@ -57,7 +61,7 @@ public class CameraController {
                 .onErrorResume(error -> {
                     log.error("Error retrieving cameras: {}", error.getMessage());
                     return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).build());
-    });
+                });
     }
 
 
@@ -75,29 +79,15 @@ public class CameraController {
                 .then(Mono.just(ResponseEntity.ok(true)));
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    @PutMapping("/updateCamera/{cameraEmail}")
+    public Mono<ResponseEntity<CameraDTO>> updateCamera(@Valid @RequestBody CameraRequestDTO cameraRequestDTO, @PathVariable String cameraEmail) {
+        return cameraService.updateCamera(cameraRequestDTO, cameraEmail)
+                .doOnSuccess(updatedCamera -> log.info("Camera updated: {}", updatedCamera.getCameraEmail()))
+                .doOnError(error -> log.error("Error updating camera: {}", error.getMessage()))
+                .map(ResponseEntity::ok);
+    }
 
 
 }
+
+// todo: add method to link camera to user/s (tamas)
