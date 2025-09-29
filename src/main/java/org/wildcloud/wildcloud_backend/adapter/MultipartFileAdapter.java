@@ -1,28 +1,32 @@
 package org.wildcloud.wildcloud_backend.adapter;
 
-import org.springframework.web.multipart.MultipartFile;
 import org.wildcloud.wildcloud_backend.domain.FileAdapter;
 
-import java.io.IOException;
+public record MultipartFileAdapter(
+        String filename,
+        String contentType,
+        byte[] bytes,
+        long size
+) implements FileAdapter {
 
-public record MultipartFileAdapter(MultipartFile file) implements FileAdapter {
     @Override
     public String getOriginalFilename() {
-        return file.getOriginalFilename();
+        return filename;
     }
 
     @Override
     public String getContentType() {
-        return file.getContentType();
+        return contentType;
     }
 
     @Override
-    public byte[] getBytes() throws IOException {
-        return file.getBytes();
+    public byte[] getBytes() {
+        return bytes;
     }
 
     @Override
     public long getSize() {
-        return file.getSize();
+        return size;
     }
 }
+

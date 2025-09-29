@@ -1,18 +1,27 @@
 package org.wildcloud.wildcloud_backend.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.wildcloud.wildcloud_backend.entity.FileMetadata;
 import org.wildcloud.wildcloud_backend.entity.ImageEntity;
+import org.wildcloud.wildcloud_backend.entity.ImageMetadata;
+import org.wildcloud.wildcloud_backend.exception.ProcessException;
 import org.wildcloud.wildcloud_backend.exception.UploadException;
-import org.wildcloud.wildcloud_backend.exception.ValidationException;
 import org.wildcloud.wildcloud_backend.model.ImageUploadData;
 import org.wildcloud.wildcloud_backend.model.UploadResult;
 import org.wildcloud.wildcloud_backend.processor.ImageProcessor;
+import org.wildcloud.wildcloud_backend.repository.FileMetadataRepository;
+import org.wildcloud.wildcloud_backend.repository.ImageMetadataRepository;
 import org.wildcloud.wildcloud_backend.repository.ImageRepository;
 import org.wildcloud.wildcloud_backend.validator.ImageValidator;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -25,77 +34,72 @@ public class ImageUploadServiceImpl implements ImageUploadService {
     private final Map<String, ImageProcessor> processors = new ConcurrentHashMap<>();
     private final List<ImageValidator> validators;
     private final ImageRepository imageRepository;
+    private final FileMetadataRepository fileMetadataRepository;
+    private final ImageMetadataRepository imageMetadataRepository;
     private final StorageService storageService;
+    private final ObjectMapper objectMapper;
     // TODO: implementera events, kan användas till notifications etc.
 //    private final ApplicationEventPublisher eventPublisher;
 
     @Override
-    public UploadResult processUpload(String sourceType, Object inputData) throws UploadException {
-        ImageProcessor processor = processors.get(sourceType);
-        if (processor == null) {
-            throw new UploadException("No processor registered for source: " + sourceType);
-        }
+    public Mono<UploadResult> processUpload(String sourceType, Object inputData) {
+        log.info("processUpload started for sourceType: {}", sourceType);
 
-        try {
-            List<ImageUploadData> imageData = processor.process(inputData);
-
-            imageData.forEach(data ->
-                    validators.forEach(v -> {
-                        try {
-                            v.validate(data);
-                        } catch (ValidationException e) {
-                            throw new RuntimeException(e);
-                        }
-                    })
-            );
-
-            return uploadImages(imageData);
-        } catch (
-                Exception e) {
-            throw new UploadException("Upload failed", e);
-        }
+        return Mono.fromCallable(() -> {
+                    ImageProcessor processor = processors.get(sourceType);
+                    if (processor == null) {
+                        throw new ProcessException("No processor registered for source: " + sourceType);
+                    }
+                    return processor.process(inputData);
+                })
+                .flatMap(imageDataList -> {
+                    return Flux.fromIterable(imageDataList)
+                            .flatMap(this::uploadSingleImage, 4)
+                            .collectList();
+                })
+                .map(uploadedEntities -> {
+                    return UploadResult.builder()
+                            .metadataList(uploadedEntities)
+                            .build();
+                })
+                .onErrorMap(RuntimeException.class, e ->
+                        new UploadException("Upload failed", e)
+                );
     }
 
-    @Override
-    public UploadResult uploadImages(List<ImageUploadData> imageDataList) {
-        List<ImageEntity> imageEntityList = new ArrayList<>();
+    public Mono<ImageEntity> uploadSingleImage(ImageUploadData data) {
+        return Mono.fromCallable(() -> {
+                    for (ImageValidator v : validators) {
+                        v.validate(data);
+                    }
+                    return data;
+                })
+                .subscribeOn(Schedulers.boundedElastic())
+                .flatMap(validatedData -> {
+                    String imageKey = buildImageKey(data);
 
-        for (ImageUploadData data : imageDataList) {
-            String imageKey = buildImageKey(data);
-            storageService.uploadImage(imageKey, data.getBuffer(), data.getFileMetadata().getContentType());
-
-            ImageEntity imageEntity = ImageEntity.builder()
-                    .userId(data.getUserId())
-                    .cameraId(data.getCameraId())
-                    .sourceType(data.getSourceType())
-                    .sourceMetadata(data.getSourceMetadata())
-                    .imageMetadata(data.getImageMetadata())
-                    .fileMetadata(data.getFileMetadata())
-                    .storageKey(imageKey)
-                    .build();
-
-            setEntityAssociations(data, imageEntity);
-
-            imageEntityList.add(imageEntity);
-            imageRepository.save(imageEntity);
-        }
-
-        return UploadResult.builder()
-                .uploadedCount(imageEntityList.size())
-                .metadataList(imageEntityList)
-                .build();
+                    return storageService.uploadImage(imageKey,
+                                    validatedData.getBuffer(),
+                                    validatedData.getFileMetadata().getContentType())
+                            .then(Mono.fromCallable(() -> buildImageEntity(validatedData, imageKey)));
+                })
+                .flatMap(this::saveImageWithMetadata)
+                .onErrorMap(RuntimeException.class, e ->
+                        new UploadException("Failed to upload " + data.getFileMetadata().getFileName(), e));
     }
 
-    private void setEntityAssociations(ImageUploadData data, ImageEntity imageEntity) {
-        if (data.getImageMetadata() != null) {
-            data.getImageMetadata().setImageEntity(imageEntity);
-            imageEntity.setImageMetadata(data.getImageMetadata());
-        }
+    private Mono<ImageEntity> saveImageWithMetadata(ImageEntityCreateData createData) {
+        return imageRepository.save(createData.getImageEntity())
+                .flatMap(savedEntity -> {
+                    createData.getFileMetadata().setImageEntityId(savedEntity.getId());
+                    createData.getImageMetadata().setImageEntityId(savedEntity.getId());
 
-        if (data.getFileMetadata() != null) {
-            data.getFileMetadata().setImageEntity(imageEntity);
-            imageEntity.setFileMetadata(data.getFileMetadata());
-        }
+                    Mono<FileMetadata> savedFileMetadata = fileMetadataRepository.save(createData.getFileMetadata());
+                    Mono<ImageMetadata> savedImageMetadata = imageMetadataRepository.save(createData.getImageMetadata());
+
+                    return Mono.zip(savedFileMetadata, savedImageMetadata)
+                            .map(tuple -> savedEntity);
+                });
     }
 
     @Override
@@ -116,5 +120,47 @@ public class ImageUploadServiceImpl implements ImageUploadService {
                 Objects.toString(imageData.getCameraId(), "null"),
                 imageData.getFileMetadata().getFileName()
         );
+    }
+
+    private ImageEntityCreateData buildImageEntity(ImageUploadData data, String imageKey) {
+        String sourceMetadataJson = null;
+        if (data.getSourceMetadata() != null && !data.getSourceMetadata().isEmpty()) {
+            try {
+                sourceMetadataJson = objectMapper.writeValueAsString(data.getSourceMetadata());
+            } catch (Exception e) {
+                log.warn("Failed to serialize source metadata: {}", e.getMessage());
+                sourceMetadataJson = "{}";
+            }
+        }
+
+        ImageEntity entity = ImageEntity.builder()
+                .userId(data.getUserId())
+                .cameraId(data.getCameraId())
+                .sourceType(data.getSourceType())
+                .sourceMetadata(sourceMetadataJson)
+                .storageKey(imageKey)
+                .build();
+
+        FileMetadata fileMetadata = FileMetadata.builder()
+                .fileName(data.getFileMetadata().getFileName())
+                .originalFileName(data.getFileMetadata().getOriginalFileName())
+                .size(data.getFileMetadata().getSize())
+                .contentType(data.getFileMetadata().getContentType())
+                .build();
+
+        ImageMetadata imageMetadata = ImageMetadata.builder()
+                .capturedAt(data.getImageMetadata().getCapturedAt())
+                .lastModified(data.getImageMetadata().getLastModified())
+                .build();
+
+        return new ImageEntityCreateData(entity, fileMetadata, imageMetadata);
+    }
+
+    @Data
+    @AllArgsConstructor
+    private static class ImageEntityCreateData {
+        private ImageEntity imageEntity;
+        private FileMetadata fileMetadata;
+        private ImageMetadata imageMetadata;
     }
 }

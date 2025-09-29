@@ -2,51 +2,63 @@ package org.wildcloud.wildcloud_backend.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
+import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
+import org.springframework.http.codec.multipart.FilePart;
+import org.springframework.web.bind.annotation.*;
 import org.wildcloud.wildcloud_backend.adapter.MultipartFileAdapter;
 import org.wildcloud.wildcloud_backend.domain.FileAdapter;
-import org.wildcloud.wildcloud_backend.model.UploadResult;
 import org.wildcloud.wildcloud_backend.request.DirectUploadRequest;
 import org.wildcloud.wildcloud_backend.service.ImageUploadService;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/upload")
 @RequiredArgsConstructor
 @Slf4j
+@CrossOrigin
 public class UploadController {
     private final ImageUploadService uploadService;
 
     // TODO: request DTO på frontend:s sida
     @PostMapping("/direct")
-    public ResponseEntity<?> directUpload(@RequestParam("file") MultipartFile[] files) {
-        try {
-            List<FileAdapter> fileAdapters = Arrays.stream(files)
-                    .map(MultipartFileAdapter::new)
-                    .collect(Collectors.toList());
-            
-            DirectUploadRequest request = DirectUploadRequest.builder()
-                    .files(fileAdapters)
-                    .build();
-
-            // TODO: skicka tillbaka en DTO? alt. ingenting alls
-            UploadResult result = uploadService.processUpload("direct", request);
-            return ResponseEntity.ok(result);
-        } catch (Exception e) {
-            log.error("Unexpected error during upload", e);
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Unexpected server error"));
-        }
+    public Mono<ResponseEntity<?>> directUpload(@RequestPart("file") Flux<FilePart> files) {
+        return files
+                .doOnNext(filePart -> log.info("Received FilePart: {}", filePart.filename()))
+                .flatMap(filePart -> DataBufferUtils.join(filePart.content())
+                        .map(buffer -> {
+                            byte[] bytes = new byte[buffer.readableByteCount()];
+                            buffer.read(bytes);
+                            DataBufferUtils.release(buffer);
+                            return (FileAdapter) new MultipartFileAdapter(
+                                    filePart.filename(),
+                                    Objects.requireNonNull(filePart.headers().getContentType()).toString(),
+                                    bytes,
+                                    bytes.length
+                            );
+                        }))
+                .collectList()
+                .map(adapters -> {
+                    DirectUploadRequest request = DirectUploadRequest.builder()
+                            .files(adapters)
+                            .userId("10")
+                            .cameraId("100")
+                            .build();
+                    return request;
+                })
+                .flatMap(req -> {
+                    return uploadService.processUpload("direct", req);
+                })
+                .map(results -> {
+                    return ResponseEntity.ok(Map.of(
+                            "message", "Upload successful",
+                            "processedFiles", results.getMetadataList().size()
+                    ));
+                });
     }
 }
+    

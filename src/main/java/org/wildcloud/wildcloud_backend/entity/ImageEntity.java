@@ -1,36 +1,33 @@
 package org.wildcloud.wildcloud_backend.entity;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
 
-import java.util.Map;
-
-@Entity
+@Table("images")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class ImageEntity {
     @Id
-    @GeneratedValue
     private Long id;
+    @Column("user_id")
     private String userId;
+    @Column("camera_id")
     private String cameraId;
+    @Column("source_type")
     private String sourceType;
-    @OneToOne(mappedBy = "imageEntity", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private FileMetadata fileMetadata;
-    @OneToOne(mappedBy = "imageEntity", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private ImageMetadata imageMetadata;
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(columnDefinition = "jsonb")
-    private Map<String, Object> sourceMetadata;
+    @Column("source_metadata")
+    private String sourceMetadata;
     private String storageKey;
 }

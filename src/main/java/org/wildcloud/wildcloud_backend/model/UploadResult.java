@@ -9,6 +9,5 @@ import java.util.List;
 @Data
 @Builder
 public class UploadResult {
-    private int uploadedCount;
     private List<ImageEntity> metadataList;
 }
