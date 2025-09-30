@@ -38,10 +38,11 @@ public class DirectUploadProcessor implements ImageProcessor {
                 FileMetadata fileMetadata = metadataService.extractFileMetadata(file);
                 ImageMetadata imageMetadata = metadataService.extractImageMetadata(file);
 
+                // todo: ha med ett uploadedVia-fält i request DTO:n för webb/app?
                 ImageUploadData imageData = ImageUploadData.builder()
                         .userId(request.getUserId())
                         .cameraId(request.getCameraId())
-                        .sourceType("direct")
+                        .sourceType(this.getSourceType().name().toLowerCase())
                         .buffer(file.getBytes())
                         .imageMetadata(imageMetadata)
                         .fileMetadata(fileMetadata)

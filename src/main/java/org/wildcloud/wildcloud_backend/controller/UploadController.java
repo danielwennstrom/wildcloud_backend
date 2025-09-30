@@ -48,9 +48,7 @@ public class UploadController {
                         .userId("10")
                         .cameraId("100")
                         .build())
-                .flatMap(req -> {
-                    return uploadService.processUpload(SourceType.DIRECT, req);
-                })
+                .flatMap(req -> uploadService.processUpload(SourceType.DIRECT, req))
                 .map(summary -> {
                     return ResponseEntity.ok(Map.of(
                             "message", "Upload finished",
