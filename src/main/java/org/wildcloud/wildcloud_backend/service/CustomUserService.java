@@ -1,4 +1,4 @@
-package org.wildcloud.wildcloud_backend.service.Implementations;
+package org.wildcloud.wildcloud_backend.service;
 
 import org.springframework.security.core.userdetails.*;
 import org.springframework.stereotype.Service;
@@ -6,13 +6,11 @@ import org.wildcloud.wildcloud_backend.repository.UserRepository;
 import reactor.core.publisher.Mono;
 
 @Service
-public class CustomUserServiceIMPL implements ReactiveUserDetailsService {
-
-
+public class CustomUserService implements ReactiveUserDetailsService {
 
     private final UserRepository userRepository;
 
-    public CustomUserServiceIMPL(UserRepository userRepository) {
+    public CustomUserService(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 

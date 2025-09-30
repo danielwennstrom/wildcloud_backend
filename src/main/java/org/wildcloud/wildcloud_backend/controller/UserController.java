@@ -9,8 +9,7 @@ import org.wildcloud.wildcloud_backend.dto.UserDTO;
 import org.wildcloud.wildcloud_backend.dto.UserLoginDTO;
 import org.wildcloud.wildcloud_backend.dto.UserLogoutDTO;
 import org.wildcloud.wildcloud_backend.dto.UserRequestDTO;
-import org.wildcloud.wildcloud_backend.entity.CameraInfo;
-import org.wildcloud.wildcloud_backend.service.Implementations.UserServiceIMPL;
+import org.wildcloud.wildcloud_backend.security.JwtUtil;
 import org.wildcloud.wildcloud_backend.service.UserService;
 import reactor.core.publisher.Mono;
 
@@ -26,12 +25,14 @@ import java.util.Set;
 @RestController
 @CrossOrigin(origins = "http://localhost:8081")
 @RequestMapping("/api/users")
-@CrossOrigin(origins = "http://localhost:8080")
 public class UserController {
 
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private JwtUtil jwtUtil;
 
     // User Endpoints
 
@@ -48,10 +49,15 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public Mono<ResponseEntity<UserDTO>> loginUser(@Valid @RequestBody UserLoginDTO userLoginDTO) {
+    public Mono<ResponseEntity<Map<String, Object>>> loginUser(@Valid @RequestBody UserLoginDTO userLoginDTO) {
         return userService.loginUser(userLoginDTO)
-                .doOnNext(user -> System.out.println("User logged in: " + userLoginDTO))
-                .map(ResponseEntity::ok);
+                .map(userDTO -> {
+                    String token = jwtUtil.generateToken(userDTO.getEmail());
+                    return ResponseEntity.ok(Map.of(
+                        "user", userDTO,
+                        "token", token
+                    ));
+                });
     }
 
 
