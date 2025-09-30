@@ -53,10 +53,11 @@ public class UploadController {
                 .flatMap(req -> {
                     return uploadService.processUpload("direct", req);
                 })
-                .map(results -> {
+                .map(summary -> {
                     return ResponseEntity.ok(Map.of(
-                            "message", "Upload successful",
-                            "processedFiles", results.getMetadataList().size()
+                            "message", "Upload finished",
+                            "successes", summary.getSuccesses(),
+                            "failures", summary.getFailures()
                     ));
                 });
     }

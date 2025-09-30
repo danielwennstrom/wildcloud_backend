@@ -13,6 +13,7 @@ import org.wildcloud.wildcloud_backend.exception.ProcessException;
 import org.wildcloud.wildcloud_backend.exception.UploadException;
 import org.wildcloud.wildcloud_backend.model.ImageUploadData;
 import org.wildcloud.wildcloud_backend.model.UploadResult;
+import org.wildcloud.wildcloud_backend.model.UploadSummary;
 import org.wildcloud.wildcloud_backend.processor.ImageProcessor;
 import org.wildcloud.wildcloud_backend.repository.FileMetadataRepository;
 import org.wildcloud.wildcloud_backend.repository.ImageMetadataRepository;
@@ -26,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -41,8 +43,7 @@ public class ImageUploadServiceImpl implements ImageUploadService {
     // TODO: implementera events, kan användas till notifications etc.
 //    private final ApplicationEventPublisher eventPublisher;
 
-    @Override
-    public Mono<UploadResult> processUpload(String sourceType, Object inputData) {
+    public Mono<UploadSummary> processUpload(String sourceType, Object inputData) {
         log.info("processUpload started for sourceType: {}", sourceType);
 
         return Mono.fromCallable(() -> {
@@ -52,20 +53,33 @@ public class ImageUploadServiceImpl implements ImageUploadService {
                     }
                     return processor.process(inputData);
                 })
-                .flatMap(imageDataList -> {
-                    return Flux.fromIterable(imageDataList)
-                            .flatMap(this::uploadSingleImage, 4)
-                            .collectList();
-                })
-                .map(uploadedEntities -> {
-                    return UploadResult.builder()
-                            .metadataList(uploadedEntities)
+                .flatMapMany(imageDataList ->
+                        Flux.fromIterable(imageDataList)
+                                .flatMap(data ->
+                                                uploadSingleImage(data)
+                                                        .map(img -> UploadResult.success(data.getFileMetadata().getFileName()))
+                                                        .onErrorResume(e -> Mono.just(
+                                                                UploadResult.failure(
+                                                                        data.getFileMetadata().getOriginalFileName(),
+                                                                        e.getMessage()
+                                                                )
+                                                        )),
+                                        4 // concurrency
+                                )
+                )
+                .collectList()
+                .map(results -> {
+                    Map<Boolean, List<UploadResult>> partitioned = results.stream()
+                            .collect(Collectors.partitioningBy(UploadResult::isSuccess));
+
+                    return UploadSummary.builder()
+                            .successes(partitioned.get(true))
+                            .failures(partitioned.get(false))
                             .build();
                 })
-                .onErrorMap(RuntimeException.class, e ->
-                        new UploadException("Upload failed", e)
-                );
+                .onErrorMap(e -> new UploadException("Upload failed", e));
     }
+
 
     public Mono<Image> uploadSingleImage(ImageUploadData data) {
         return Mono.fromCallable(() -> {
@@ -99,7 +113,8 @@ public class ImageUploadServiceImpl implements ImageUploadService {
 
                     return Mono.zip(savedFileMetadata, savedImageMetadata)
                             .map(tuple -> savedEntity);
-                });
+                })
+                .onErrorMap(e -> new RuntimeException("Failed to save image to database: " + createData.fileMetadata.getOriginalFileName()));
     }
 
     @Override
