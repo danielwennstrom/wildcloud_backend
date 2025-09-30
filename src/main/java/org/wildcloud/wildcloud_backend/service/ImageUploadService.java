@@ -1,6 +1,6 @@
 package org.wildcloud.wildcloud_backend.service;
 
-import org.wildcloud.wildcloud_backend.entity.ImageEntity;
+import org.wildcloud.wildcloud_backend.entity.Image;
 import org.wildcloud.wildcloud_backend.exception.ProcessException;
 import org.wildcloud.wildcloud_backend.exception.UploadException;
 import org.wildcloud.wildcloud_backend.model.ImageUploadData;
@@ -12,7 +12,7 @@ import reactor.core.publisher.Mono;
 public interface ImageUploadService {
     Mono<UploadResult> processUpload(String sourceType, Object inputData) throws UploadException, ProcessException;
 
-    Mono<ImageEntity> uploadSingleImage(ImageUploadData data);
+    Mono<Image> uploadSingleImage(ImageUploadData data);
 
 //    UploadResult uploadImages(List<ImageUploadData> imageData);
 

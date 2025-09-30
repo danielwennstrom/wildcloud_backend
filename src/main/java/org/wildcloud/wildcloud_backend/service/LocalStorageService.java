@@ -28,13 +28,13 @@ public class LocalStorageService implements StorageService {
                     Path targetFile = uploadDir.resolve(key);
                     Files.createDirectories(targetFile.getParent());
                     Files.write(targetFile, imageData);
-                    log.info("Successfully uploaded to local: {}", key);
+                    log.info("Successfully uploaded to local storage: {}", key);
 
                     return targetFile.toUri().toString();
                 })
                 .subscribeOn(Schedulers.boundedElastic())
                 .onErrorMap(IOException.class, e ->
-                        new RuntimeException("Failed to save image locally", e));
+                        new RuntimeException("Failed to save image in local storage", e));
     }
 
     @Override
@@ -50,8 +50,26 @@ public class LocalStorageService implements StorageService {
 
             return targetFile.toUri().toString();
         } catch (IOException e) {
-            throw new RuntimeException("Failed to find image locally", e);
+            throw new RuntimeException("Failed to find image in local storage", e);
         }
+    }
+
+    @Override
+    public Mono<Void> deleteImage(String key) {
+        return Mono.fromCallable(() -> {
+                    Path uploadDir = Paths.get("uploads");
+                    if (!Files.exists(uploadDir)) {
+                        Files.createDirectories(uploadDir);
+                    }
+
+                    Path targetFile = uploadDir.resolve(key);
+
+                    return Files.deleteIfExists(targetFile);
+                })
+                .subscribeOn(Schedulers.boundedElastic())
+                .doOnSuccess(v -> log.info("Successfully deleted image from local storage: {}", key))
+                .onErrorMap(e -> new RuntimeException("Failed to delete image from local storage: " + key, e))
+                .then();
     }
 }
 

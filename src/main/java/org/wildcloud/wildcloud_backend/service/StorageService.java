@@ -29,4 +29,6 @@ public interface StorageService {
      * or a temporary signed URL if retrieving an image from R2
      */
     String retrieveImage(String key);
+
+    Mono<Void> deleteImage(String key);
 }

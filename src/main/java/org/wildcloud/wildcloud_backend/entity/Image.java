@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
@@ -14,7 +15,7 @@ import org.springframework.data.relational.core.mapping.Table;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ImageEntity {
+public class Image {
     @Id
     private Long id;
     @Column("user_id")
@@ -24,8 +25,10 @@ public class ImageEntity {
     @Column("source_type")
     private String sourceType;
     @JsonManagedReference
+    @Transient
     private FileMetadata fileMetadata;
     @JsonManagedReference
+    @Transient
     private ImageMetadata imageMetadata;
     @Column("source_metadata")
     private String sourceMetadata;

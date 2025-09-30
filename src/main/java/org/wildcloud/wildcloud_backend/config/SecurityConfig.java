@@ -16,6 +16,7 @@ public class SecurityConfig {
                 .cors(ServerHttpSecurity.CorsSpec::disable)
                 .authorizeExchange(exchanges -> exchanges
                         .pathMatchers("/api/upload/**").permitAll()
+                        .pathMatchers("/api/images/**").permitAll()
                 )
                 .build();
     }

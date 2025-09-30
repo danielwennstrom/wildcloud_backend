@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.wildcloud.wildcloud_backend.entity.FileMetadata;
-import org.wildcloud.wildcloud_backend.entity.ImageEntity;
+import org.wildcloud.wildcloud_backend.entity.Image;
 import org.wildcloud.wildcloud_backend.entity.ImageMetadata;
 import org.wildcloud.wildcloud_backend.exception.ProcessException;
 import org.wildcloud.wildcloud_backend.exception.UploadException;
@@ -67,7 +67,7 @@ public class ImageUploadServiceImpl implements ImageUploadService {
                 );
     }
 
-    public Mono<ImageEntity> uploadSingleImage(ImageUploadData data) {
+    public Mono<Image> uploadSingleImage(ImageUploadData data) {
         return Mono.fromCallable(() -> {
                     for (ImageValidator v : validators) {
                         v.validate(data);
@@ -88,8 +88,8 @@ public class ImageUploadServiceImpl implements ImageUploadService {
                         new UploadException("Failed to upload " + data.getFileMetadata().getFileName(), e));
     }
 
-    private Mono<ImageEntity> saveImageWithMetadata(ImageEntityCreateData createData) {
-        return imageRepository.save(createData.getImageEntity())
+    private Mono<Image> saveImageWithMetadata(ImageEntityCreateData createData) {
+        return imageRepository.save(createData.getImage())
                 .flatMap(savedEntity -> {
                     createData.getFileMetadata().setImageEntityId(savedEntity.getId());
                     createData.getImageMetadata().setImageEntityId(savedEntity.getId());
@@ -133,7 +133,7 @@ public class ImageUploadServiceImpl implements ImageUploadService {
             }
         }
 
-        ImageEntity entity = ImageEntity.builder()
+        Image entity = Image.builder()
                 .userId(data.getUserId())
                 .cameraId(data.getCameraId())
                 .sourceType(data.getSourceType())
@@ -159,7 +159,7 @@ public class ImageUploadServiceImpl implements ImageUploadService {
     @Data
     @AllArgsConstructor
     private static class ImageEntityCreateData {
-        private ImageEntity imageEntity;
+        private Image image;
         private FileMetadata fileMetadata;
         private ImageMetadata imageMetadata;
     }
