@@ -4,7 +4,7 @@ package org.wildcloud.wildcloud_backend.repository;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import org.springframework.stereotype.Repository;
 import org.wildcloud.wildcloud_backend.entity.UserInfo;
-import reactor.core.publisher.Mono;´
+import reactor.core.publisher.Mono;
 
 @Repository
 public interface UserRepository extends  ReactiveCrudRepository <UserInfo, Long> {
