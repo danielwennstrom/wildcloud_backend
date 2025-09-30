@@ -64,7 +64,7 @@ public class ImageUploadServiceImpl implements ImageUploadService {
                                                                         e.getMessage()
                                                                 )
                                                         )),
-                                        4 // concurrency
+                                        5 // concurrency
                                 )
                 )
                 .collectList()
