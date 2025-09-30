@@ -2,12 +2,9 @@ package org.wildcloud.wildcloud_backend.service;
 
 import org.wildcloud.wildcloud_backend.dto.UserDTO;
 import org.wildcloud.wildcloud_backend.dto.UserLoginDTO;
-import org.wildcloud.wildcloud_backend.dto.UserLogoutDTO;
 import org.wildcloud.wildcloud_backend.dto.UserRequestDTO;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
-import java.util.Set;
 
 public interface UserService {
 

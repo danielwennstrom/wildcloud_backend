@@ -5,10 +5,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.wildcloud.wildcloud_backend.dto.UserDTO;
-import org.wildcloud.wildcloud_backend.dto.UserLoginDTO;
-import org.wildcloud.wildcloud_backend.dto.UserRequestDTO;
+import org.wildcloud.wildcloud_backend.dto.*;
 import org.wildcloud.wildcloud_backend.security.JwtUtil;
+import org.wildcloud.wildcloud_backend.service.RefreshTokenService;
 import org.wildcloud.wildcloud_backend.service.UserService;
 import reactor.core.publisher.Mono;
 
@@ -24,6 +23,7 @@ public class UserController {
 
     private final UserService userService;
     private final JwtUtil jwtUtil;
+    private final RefreshTokenService refreshTokenService;
 
     // User Endpoints
 
@@ -42,19 +42,40 @@ public class UserController {
     @PostMapping("/login")
     public Mono<ResponseEntity<Map<String, Object>>> loginUser(@Valid @RequestBody UserLoginDTO userLoginDTO) {
         return userService.loginUser(userLoginDTO)
-                .map(userDTO -> {
-                    String token = jwtUtil.generateToken(userDTO.getEmail());
-                    return ResponseEntity.ok(Map.of(
-                        "user", userDTO,
-                        "token", token
-                    ));
-                });
+                .flatMap(userDTO -> refreshTokenService.createRefreshToken(userDTO.getId())
+                        .map(refreshToken -> {
+                            String accessToken = jwtUtil.generateToken(userDTO.getEmail());
+                            return ResponseEntity.ok(Map.of(
+                                "user", userDTO,
+                                "accessToken", accessToken,
+                                "refreshToken", refreshToken.getToken(),
+                                "tokenType", "Bearer"
+                            ));
+                        }));
+    }
+
+    @PostMapping("/refreshToken")
+    public Mono<ResponseEntity<TokenRefreshResponseDTO>> refreshToken(@Valid @RequestBody TokenRefreshRequestDTO request) {
+        return refreshTokenService.findByToken(request.getRefreshToken())
+                .flatMap(refreshTokenService::verifyExpiration)
+                .flatMap(refreshToken -> userService.findById(refreshToken.getUserId())
+                        .map(user -> {
+                            String token = jwtUtil.generateToken(user.getEmail());
+                            return ResponseEntity.ok(TokenRefreshResponseDTO.builder()
+                                    .accessToken(token)
+                                    .refreshToken(refreshToken.getToken())
+                                    .tokenType("Bearer")
+                                    .build());
+                        }))
+                .switchIfEmpty(Mono.just(ResponseEntity.badRequest().build()));
     }
 
     @PostMapping("/logout")
     public Mono<ResponseEntity<String>> logoutUser(@RequestBody Map<String, String> request) {
         String userEmail = request.get("userEmail");
-        return userService.logoutUser(userEmail)
+        return userService.findByUserEmail(userEmail)
+                .flatMap(user -> refreshTokenService.deleteByUserId(user.getId())
+                        .then(userService.logoutUser(userEmail)))
                 .thenReturn(ResponseEntity.ok("User logged out successfully"))
                 .onErrorResume(e -> {
                     System.err.println("Error logging out user: " + e.getMessage());
@@ -74,8 +95,6 @@ public class UserController {
         return userService.deleteUser(userId)
                 .thenReturn(ResponseEntity.ok(true))
                 .onErrorReturn(ResponseEntity.ok(false));
-
-
     }
 
     @PostMapping("/updateUser/{userId}")
