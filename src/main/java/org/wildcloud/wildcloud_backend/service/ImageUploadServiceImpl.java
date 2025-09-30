@@ -9,12 +9,14 @@ import org.springframework.stereotype.Service;
 import org.wildcloud.wildcloud_backend.entity.FileMetadata;
 import org.wildcloud.wildcloud_backend.entity.Image;
 import org.wildcloud.wildcloud_backend.entity.ImageMetadata;
+import org.wildcloud.wildcloud_backend.enums.SourceType;
 import org.wildcloud.wildcloud_backend.exception.ProcessException;
 import org.wildcloud.wildcloud_backend.exception.UploadException;
 import org.wildcloud.wildcloud_backend.model.ImageUploadData;
 import org.wildcloud.wildcloud_backend.model.UploadResult;
 import org.wildcloud.wildcloud_backend.model.UploadSummary;
 import org.wildcloud.wildcloud_backend.processor.ImageProcessor;
+import org.wildcloud.wildcloud_backend.registrar.ProcessorRegistrar;
 import org.wildcloud.wildcloud_backend.repository.FileMetadataRepository;
 import org.wildcloud.wildcloud_backend.repository.ImageMetadataRepository;
 import org.wildcloud.wildcloud_backend.repository.ImageRepository;
@@ -26,14 +28,13 @@ import reactor.core.scheduler.Schedulers;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class ImageUploadServiceImpl implements ImageUploadService {
-    private final Map<String, ImageProcessor> processors = new ConcurrentHashMap<>();
+    private final ProcessorRegistrar processorRegistrar;
     private final List<ImageValidator> validators;
     private final ImageRepository imageRepository;
     private final FileMetadataRepository fileMetadataRepository;
@@ -43,16 +44,15 @@ public class ImageUploadServiceImpl implements ImageUploadService {
     // TODO: implementera events, kan användas till notifications etc.
 //    private final ApplicationEventPublisher eventPublisher;
 
-    public Mono<UploadSummary> processUpload(String sourceType, Object inputData) {
+    public Mono<UploadSummary> processUpload(SourceType sourceType, Object inputData) {
         log.info("processUpload started for sourceType: {}", sourceType);
+        ImageProcessor processor = processorRegistrar.getProcessor(sourceType);
 
-        return Mono.fromCallable(() -> {
-                    ImageProcessor processor = processors.get(sourceType);
-                    if (processor == null) {
-                        throw new ProcessException("No processor registered for source: " + sourceType);
-                    }
-                    return processor.process(inputData);
-                })
+        if (processor == null) {
+            throw new ProcessException("No processor registered for source: " + sourceType);
+        }
+
+        return Mono.fromCallable(() -> processor.process(inputData))
                 .flatMapMany(imageDataList ->
                         Flux.fromIterable(imageDataList)
                                 .flatMap(data ->
@@ -95,14 +95,14 @@ public class ImageUploadServiceImpl implements ImageUploadService {
                     return storageService.uploadImage(imageKey,
                                     validatedData.getBuffer(),
                                     validatedData.getFileMetadata().getContentType())
-                            .then(Mono.fromCallable(() -> buildImageEntity(validatedData, imageKey)));
+                            .then(Mono.fromCallable(() -> buildImageCreateData(validatedData, imageKey)));
                 })
                 .flatMap(this::saveImageWithMetadata)
                 .onErrorMap(RuntimeException.class, e ->
                         new UploadException("Failed to upload " + data.getFileMetadata().getFileName(), e));
     }
 
-    private Mono<Image> saveImageWithMetadata(ImageEntityCreateData createData) {
+    private Mono<Image> saveImageWithMetadata(ImageCreateData createData) {
         return imageRepository.save(createData.getImage())
                 .flatMap(savedEntity -> {
                     createData.getFileMetadata().setImageEntityId(savedEntity.getId());
@@ -117,18 +117,6 @@ public class ImageUploadServiceImpl implements ImageUploadService {
                 .onErrorMap(e -> new RuntimeException("Failed to save image to database: " + createData.fileMetadata.getOriginalFileName()));
     }
 
-    @Override
-    public void registerProcessor(String sourceType, ImageProcessor processor) {
-        processors.put(sourceType, processor);
-        log.info("Registered processor for source type: {}", sourceType);
-    }
-
-    @Override
-    public void registerValidator(String beanName, ImageValidator validator) {
-        validators.add(validator);
-        log.info("Registered validator: {}", beanName);
-    }
-
     private String buildImageKey(ImageUploadData imageData) {
         return String.format("images/%s/%s/%s",
                 Objects.toString(imageData.getUserId(), "null"),
@@ -137,7 +125,7 @@ public class ImageUploadServiceImpl implements ImageUploadService {
         );
     }
 
-    private ImageEntityCreateData buildImageEntity(ImageUploadData data, String imageKey) {
+    private ImageCreateData buildImageCreateData(ImageUploadData data, String imageKey) {
         String sourceMetadataJson = null;
         if (data.getSourceMetadata() != null && !data.getSourceMetadata().isEmpty()) {
             try {
@@ -148,7 +136,7 @@ public class ImageUploadServiceImpl implements ImageUploadService {
             }
         }
 
-        Image entity = Image.builder()
+        Image image = Image.builder()
                 .userId(data.getUserId())
                 .cameraId(data.getCameraId())
                 .sourceType(data.getSourceType())
@@ -156,24 +144,15 @@ public class ImageUploadServiceImpl implements ImageUploadService {
                 .storageKey(imageKey)
                 .build();
 
-        FileMetadata fileMetadata = FileMetadata.builder()
-                .fileName(data.getFileMetadata().getFileName())
-                .originalFileName(data.getFileMetadata().getOriginalFileName())
-                .size(data.getFileMetadata().getSize())
-                .contentType(data.getFileMetadata().getContentType())
-                .build();
+        FileMetadata fileMetadata = data.getFileMetadata();
+        ImageMetadata imageMetadata = data.getImageMetadata();
 
-        ImageMetadata imageMetadata = ImageMetadata.builder()
-                .capturedAt(data.getImageMetadata().getCapturedAt())
-                .lastModified(data.getImageMetadata().getLastModified())
-                .build();
-
-        return new ImageEntityCreateData(entity, fileMetadata, imageMetadata);
+        return new ImageCreateData(image, fileMetadata, imageMetadata);
     }
 
     @Data
     @AllArgsConstructor
-    private static class ImageEntityCreateData {
+    private static class ImageCreateData {
         private Image image;
         private FileMetadata fileMetadata;
         private ImageMetadata imageMetadata;

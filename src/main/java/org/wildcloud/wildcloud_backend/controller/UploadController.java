@@ -8,6 +8,7 @@ import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.web.bind.annotation.*;
 import org.wildcloud.wildcloud_backend.adapter.MultipartFileAdapter;
 import org.wildcloud.wildcloud_backend.domain.FileAdapter;
+import org.wildcloud.wildcloud_backend.enums.SourceType;
 import org.wildcloud.wildcloud_backend.request.DirectUploadRequest;
 import org.wildcloud.wildcloud_backend.service.ImageUploadService;
 import reactor.core.publisher.Flux;
@@ -42,16 +43,13 @@ public class UploadController {
                             );
                         }))
                 .collectList()
-                .map(adapters -> {
-                    DirectUploadRequest request = DirectUploadRequest.builder()
-                            .files(adapters)
-                            .userId("10")
-                            .cameraId("100")
-                            .build();
-                    return request;
-                })
+                .map(adapters -> DirectUploadRequest.builder()
+                        .files(adapters)
+                        .userId("10")
+                        .cameraId("100")
+                        .build())
                 .flatMap(req -> {
-                    return uploadService.processUpload("direct", req);
+                    return uploadService.processUpload(SourceType.DIRECT, req);
                 })
                 .map(summary -> {
                     return ResponseEntity.ok(Map.of(
