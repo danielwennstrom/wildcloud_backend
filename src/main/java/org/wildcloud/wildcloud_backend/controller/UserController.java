@@ -27,33 +27,6 @@ public class UserController {
 
     // User Endpoints
 
-    @PostMapping("/createUser")
-    public Mono<ResponseEntity<UserDTO>> registerUser(@Valid @RequestBody UserRequestDTO userRequestDTO) {
-        return userService.registerUser(userRequestDTO)
-                .map(ResponseEntity::ok)
-                .onErrorResume(e -> {
-                    System.err.println("Error registering user: " + e.getMessage());
-                    e.printStackTrace();
-                    return Mono.just(ResponseEntity.status(500).build());
-                })
-                .doOnSuccess(response -> System.out.println("User registered: " + userRequestDTO));
-    }
-
-    @PostMapping("/login")
-    public Mono<ResponseEntity<Map<String, Object>>> loginUser(@Valid @RequestBody UserLoginDTO userLoginDTO) {
-        return userService.loginUser(userLoginDTO)
-                .flatMap(userDTO -> refreshTokenService.createRefreshToken(userDTO.getId())
-                        .map(refreshToken -> {
-                            String accessToken = jwtUtil.generateToken(userDTO.getEmail());
-                            return ResponseEntity.ok(Map.of(
-                                "user", userDTO,
-                                "accessToken", accessToken,
-                                "refreshToken", refreshToken.getToken(),
-                                "tokenType", "Bearer"
-                            ));
-                        }));
-    }
-
     @PostMapping("/refreshToken")
     public Mono<ResponseEntity<TokenRefreshResponseDTO>> refreshToken(@Valid @RequestBody TokenRefreshRequestDTO request) {
         return refreshTokenService.findByToken(request.getRefreshToken())
