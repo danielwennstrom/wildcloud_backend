@@ -1,5 +1,6 @@
 package org.wildcloud.wildcloud_backend.config;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
@@ -13,13 +14,10 @@ import org.wildcloud.wildcloud_backend.security.AuthenticationFilter;
 
 @Configuration
 @EnableWebFluxSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
 
     private final AuthenticationFilter authenticationFilter;
-
-    public SecurityConfig(AuthenticationFilter authenticationFilter) {
-        this.authenticationFilter = authenticationFilter;
-    }
 
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {

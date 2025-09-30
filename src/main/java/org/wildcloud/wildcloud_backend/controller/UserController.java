@@ -2,12 +2,11 @@ package org.wildcloud.wildcloud_backend.controller;
 
 
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.wildcloud.wildcloud_backend.dto.UserDTO;
 import org.wildcloud.wildcloud_backend.dto.UserLoginDTO;
-import org.wildcloud.wildcloud_backend.dto.UserLogoutDTO;
 import org.wildcloud.wildcloud_backend.dto.UserRequestDTO;
 import org.wildcloud.wildcloud_backend.security.JwtUtil;
 import org.wildcloud.wildcloud_backend.service.UserService;
@@ -15,24 +14,16 @@ import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-
-//              !!!!!!!!!!!!!OBS!!!!!!!!!!!
-//KOM IHÅG ATT LÄGGA TILL NYA ENDPOINTS TILL SECURITYCONFIGURATION
-//SÅ ATT DE INTE KRÄVER AUTHENTICERING FÖR ATT TESTA!!!!!!!!
-//              !!!!!!!!!!!!!OBS!!!!!!!!!!!
 
 @RestController
 @CrossOrigin(origins = "http://localhost:8081")
 @RequestMapping("/api/users")
+@RequiredArgsConstructor
 public class UserController {
 
 
-    @Autowired
-    private UserService userService;
-
-    @Autowired
-    private JwtUtil jwtUtil;
+    private final UserService userService;
+    private final JwtUtil jwtUtil;
 
     // User Endpoints
 
@@ -59,8 +50,6 @@ public class UserController {
                     ));
                 });
     }
-
-
 
     @PostMapping("/logout")
     public Mono<ResponseEntity<String>> logoutUser(@RequestBody Map<String, String> request) {

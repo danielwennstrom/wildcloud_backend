@@ -1,5 +1,6 @@
 package org.wildcloud.wildcloud_backend.security;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
@@ -12,15 +13,11 @@ import reactor.core.publisher.Mono;
 import org.springframework.security.core.Authentication;
 
 @Component
+@RequiredArgsConstructor
 public class AuthenticationFilter implements WebFilter {
 
     private final JwtUtil jwtUtil;
     private final CustomUserService userService;
-
-    public AuthenticationFilter(JwtUtil jwtUtil, CustomUserService userService) {
-        this.jwtUtil = jwtUtil;
-        this.userService = userService;
-    }
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
