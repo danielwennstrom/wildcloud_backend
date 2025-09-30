@@ -13,6 +13,7 @@ import org.wildcloud.wildcloud_backend.enums.SourceType;
 import org.wildcloud.wildcloud_backend.exception.ProcessException;
 import org.wildcloud.wildcloud_backend.exception.UploadException;
 import org.wildcloud.wildcloud_backend.model.ImageUploadData;
+import org.wildcloud.wildcloud_backend.model.UploadRequest;
 import org.wildcloud.wildcloud_backend.model.UploadResult;
 import org.wildcloud.wildcloud_backend.model.UploadSummary;
 import org.wildcloud.wildcloud_backend.processor.ImageProcessor;
@@ -44,15 +45,15 @@ public class ImageUploadServiceImpl implements ImageUploadService {
     // TODO: implementera events, kan användas till notifications etc.
 //    private final ApplicationEventPublisher eventPublisher;
 
-    public Mono<UploadSummary> processUpload(SourceType sourceType, Object inputData) {
+    public Mono<UploadSummary> processUpload(SourceType sourceType, UploadRequest request) {
         log.info("processUpload started for sourceType: {}", sourceType);
         ImageProcessor processor = processorRegistrar.getProcessor(sourceType);
 
         if (processor == null) {
             throw new ProcessException("No processor registered for source: " + sourceType);
         }
-
-        return Mono.fromCallable(() -> processor.process(inputData))
+        
+        return Mono.fromCallable(() -> processor.process(request))
                 .flatMapMany(imageDataList ->
                         Flux.fromIterable(imageDataList)
                                 .flatMap(data ->

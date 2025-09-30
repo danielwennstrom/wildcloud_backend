@@ -1,4 +1,4 @@
-package org.wildcloud.wildcloud_backend.request;
+package org.wildcloud.wildcloud_backend.model;
 
 import lombok.Builder;
 import lombok.Data;
@@ -8,7 +8,7 @@ import java.util.List;
 
 @Data
 @Builder
-public class DirectUploadRequest {
+public class UploadRequest {
     private String userId;
     private String cameraId;
     private List<FileAdapter> files;

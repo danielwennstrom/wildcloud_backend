@@ -9,7 +9,7 @@ import org.wildcloud.wildcloud_backend.entity.ImageMetadata;
 import org.wildcloud.wildcloud_backend.enums.SourceType;
 import org.wildcloud.wildcloud_backend.exception.ProcessException;
 import org.wildcloud.wildcloud_backend.model.ImageUploadData;
-import org.wildcloud.wildcloud_backend.request.DirectUploadRequest;
+import org.wildcloud.wildcloud_backend.model.UploadRequest;
 import org.wildcloud.wildcloud_backend.service.metadata.MetadataService;
 
 import java.util.ArrayList;
@@ -23,11 +23,7 @@ public class DirectUploadProcessor implements ImageProcessor {
     private final MetadataService metadataService;
 
     @Override
-    public List<ImageUploadData> process(Object inputData) throws ProcessException {
-        if (!(inputData instanceof DirectUploadRequest request)) {
-            throw new ProcessException("Invalid input data for direct upload");
-        }
-
+    public List<ImageUploadData> process(UploadRequest request) throws ProcessException {
         List<ImageUploadData> result = new ArrayList<>();
 
         try {
