@@ -23,6 +23,6 @@ public class FileMetadata {
     private Long size;
     @Column("content_type")
     private String contentType;
-    @Column("image_entity_id")
-    private Long imageEntityId;
+    @Column("image_id")
+    private Long imageId;
 }

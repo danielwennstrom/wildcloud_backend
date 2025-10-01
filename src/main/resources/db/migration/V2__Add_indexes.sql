@@ -7,8 +7,8 @@ CREATE INDEX idx_images_storage_key ON images (storage_key);
 -- Already unique, but good for lookups
 
 -- Foreign key indexes (PostgreSQL doesn't auto-create these)
-CREATE INDEX idx_file_metadata_image_id ON file_metadata (image_entity_id);
-CREATE INDEX idx_image_metadata_image_id ON image_metadata (image_entity_id);
+CREATE INDEX idx_file_metadata_image_id ON file_metadata (image_id);
+CREATE INDEX idx_image_metadata_image_id ON image_metadata (image_id);
 
 -- Composite indexes for common query patterns
 CREATE INDEX idx_images_user_camera ON images (user_id, camera_id);

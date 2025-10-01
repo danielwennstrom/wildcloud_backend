@@ -15,7 +15,7 @@ CREATE TABLE images
 CREATE TABLE file_metadata
 (
     id                 BIGSERIAL PRIMARY KEY,
-    image_entity_id    BIGINT       NOT NULL,
+    image_id BIGINT NOT NULL,
     file_name          VARCHAR(255) NOT NULL,
     original_file_name VARCHAR(255),
     size               BIGINT,
@@ -24,7 +24,7 @@ CREATE TABLE file_metadata
     updated_at         TIMESTAMPTZ DEFAULT NOW(),
 
     CONSTRAINT fk_file_metadata_image
-        FOREIGN KEY (image_entity_id)
+        FOREIGN KEY (image_id)
             REFERENCES images (id)
             ON DELETE CASCADE
 );
@@ -33,14 +33,14 @@ CREATE TABLE file_metadata
 CREATE TABLE image_metadata
 (
     id              BIGSERIAL PRIMARY KEY,
-    image_entity_id BIGINT NOT NULL,
+    image_id BIGINT NOT NULL,
     captured_at     TIMESTAMPTZ,
     last_modified   TIMESTAMPTZ,
     created_at      TIMESTAMPTZ DEFAULT NOW(),
     updated_at      TIMESTAMPTZ DEFAULT NOW(),
 
     CONSTRAINT fk_image_metadata_image
-        FOREIGN KEY (image_entity_id)
+        FOREIGN KEY (image_id)
             REFERENCES images (id)
             ON DELETE CASCADE
 );

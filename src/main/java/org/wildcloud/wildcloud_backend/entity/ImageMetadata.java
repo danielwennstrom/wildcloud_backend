@@ -22,6 +22,6 @@ public class ImageMetadata {
     private OffsetDateTime capturedAt;
     @Column("last_modified")
     private OffsetDateTime lastModified;
-    @Column("image_entity_id")
-    private Long imageEntityId;
+    @Column("image_id")
+    private Long imageId;
 }

@@ -106,8 +106,8 @@ public class ImageUploadServiceImpl implements ImageUploadService {
     private Mono<Image> saveImageWithMetadata(ImageCreateData createData) {
         return imageRepository.save(createData.getImage())
                 .flatMap(savedEntity -> {
-                    createData.getFileMetadata().setImageEntityId(savedEntity.getId());
-                    createData.getImageMetadata().setImageEntityId(savedEntity.getId());
+                    createData.getFileMetadata().setImageId(savedEntity.getId());
+                    createData.getImageMetadata().setImageId(savedEntity.getId());
 
                     Mono<FileMetadata> savedFileMetadata = fileMetadataRepository.save(createData.getFileMetadata());
                     Mono<ImageMetadata> savedImageMetadata = imageMetadataRepository.save(createData.getImageMetadata());

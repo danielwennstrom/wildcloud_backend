@@ -43,16 +43,16 @@ public class ImageServiceImpl implements ImageService {
                             .collect(Collectors.toList());
 
                     Mono<List<ImageMetadata>> imageMetaList =
-                            imageMetadataRepository.findByImageEntityIdIn(imageIds).collectList();
+                            imageMetadataRepository.findByImageIdIn(imageIds).collectList();
                     Mono<List<FileMetadata>> fileMetaList =
-                            fileMetadataRepository.findByImageEntityIdIn(imageIds).collectList();
+                            fileMetadataRepository.findByImageIdIn(imageIds).collectList();
 
                     return Mono.zip(imageMetaList, fileMetaList)
                             .flatMapMany(tuple -> {
                                 Map<Long, ImageMetadata> imageMetaMap = tuple.getT1().stream()
-                                        .collect(Collectors.toMap(ImageMetadata::getImageEntityId, m -> m));
+                                        .collect(Collectors.toMap(ImageMetadata::getImageId, m -> m));
                                 Map<Long, FileMetadata> fileMetaMap = tuple.getT2().stream()
-                                        .collect(Collectors.toMap(FileMetadata::getImageEntityId, m -> m));
+                                        .collect(Collectors.toMap(FileMetadata::getImageId, m -> m));
 
                                 return Flux.fromIterable(images)
                                         .map(image -> new ImageWithMetadataHolder(

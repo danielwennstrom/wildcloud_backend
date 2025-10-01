@@ -10,9 +10,9 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 
 public interface FileMetadataRepository extends ReactiveCrudRepository<FileMetadata, Long> {
-    Flux<FileMetadata> findByImageEntityIdIn(List<Long> imageIds);
+    Flux<FileMetadata> findByImageIdIn(List<Long> imageIds);
 
     @Modifying
-    @Query("DELETE FROM file_metadata WHERE image_entity_id = :imageEntityId")
-    Mono<Void> deleteByImageEntityId(Long imageEntityId);
+    @Query("DELETE FROM file_metadata WHERE image_id = :imageId")
+    Mono<Void> deleteByImageEntityId(Long imageId);
 }
