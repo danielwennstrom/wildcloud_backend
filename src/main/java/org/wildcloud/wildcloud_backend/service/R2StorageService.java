@@ -30,7 +30,7 @@ public class R2StorageService implements StorageService {
 
 
     @Override
-    public Mono<String> uploadImage(String key, byte[] imageData, String contentType) {
+    public Mono<Void> uploadImage(String key, byte[] imageData, String contentType) {
         PutObjectRequest request = PutObjectRequest.builder()
                 .bucket(r2Properties.getBucketName())
                 .key(key)
@@ -39,11 +39,10 @@ public class R2StorageService implements StorageService {
 
         return Mono.fromFuture(() -> r2AsyncClient.putObject(request, AsyncRequestBody.fromBytes(imageData)))
                 .doOnSuccess(response -> log.info("Successfully uploaded to R2: {}", key))
-                .map(response -> buildImageUrl(key))
                 .onErrorMap(e ->
-                        new RuntimeException("Failed to upload image to R2 " + key, e));
+                        new RuntimeException("Failed to upload image to R2: " + key, e))
+                .then();
     }
-
 
     @Override
     public String retrieveImage(String key) {
@@ -61,14 +60,6 @@ public class R2StorageService implements StorageService {
                 .doOnSuccess(v -> log.info("Successfully deleted image from R2: {}", key))
                 .onErrorMap(e -> new RuntimeException("Failed to delete image from R2: " + key, e))
                 .then();
-    }
-
-
-    private String buildImageUrl(String key) {
-        return String.format("https://%s.r2.cloudflarestorage.com/%s/%s",
-                r2Properties.getAccountId(),
-                r2Properties.getBucketName(),
-                key);
     }
 
     private String generateSignedUrl(String imageKey, Duration expiration) {

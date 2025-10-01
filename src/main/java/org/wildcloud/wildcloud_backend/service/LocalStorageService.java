@@ -18,7 +18,7 @@ import java.nio.file.Paths;
 @Slf4j
 public class LocalStorageService implements StorageService {
     @Override
-    public Mono<String> uploadImage(String key, byte[] imageData, String contentType) {
+    public Mono<Void> uploadImage(String key, byte[] imageData, String contentType) {
         return Mono.fromCallable(() -> {
                     Path uploadDir = Paths.get("uploads");
                     if (!Files.exists(uploadDir)) {
@@ -28,13 +28,14 @@ public class LocalStorageService implements StorageService {
                     Path targetFile = uploadDir.resolve(key);
                     Files.createDirectories(targetFile.getParent());
                     Files.write(targetFile, imageData);
-                    log.info("Successfully uploaded to local storage: {}", key);
 
                     return targetFile.toUri().toString();
                 })
                 .subscribeOn(Schedulers.boundedElastic())
+                .doOnSuccess(response -> log.info("Successfully uploaded to local storage: {}", key))
                 .onErrorMap(IOException.class, e ->
-                        new RuntimeException("Failed to save image in local storage", e));
+                        new RuntimeException("Failed to save image in local storage", e))
+                .then();
     }
 
     @Override

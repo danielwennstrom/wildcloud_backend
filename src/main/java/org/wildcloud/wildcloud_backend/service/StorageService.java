@@ -19,7 +19,7 @@ public interface StorageService {
      * @return The key of the object pointing to the location of the
      * newly uploaded image
      */
-    Mono<String> uploadImage(String key, byte[] imageBytes, String contentType);
+    Mono<Void> uploadImage(String key, byte[] imageBytes, String contentType);
 
     /**
      *
