@@ -8,8 +8,8 @@ import org.wildcloud.wildcloud_backend.entity.FileMetadata;
 import org.wildcloud.wildcloud_backend.entity.ImageMetadata;
 import org.wildcloud.wildcloud_backend.enums.SourceType;
 import org.wildcloud.wildcloud_backend.exception.ProcessException;
+import org.wildcloud.wildcloud_backend.model.ImageUploadContext;
 import org.wildcloud.wildcloud_backend.model.ImageUploadData;
-import org.wildcloud.wildcloud_backend.model.UploadRequest;
 import org.wildcloud.wildcloud_backend.service.metadata.MetadataService;
 
 import java.util.ArrayList;
@@ -23,21 +23,21 @@ public class DirectUploadProcessor implements ImageProcessor {
     private final MetadataService metadataService;
 
     @Override
-    public List<ImageUploadData> process(UploadRequest request) throws ProcessException {
+    public List<ImageUploadData> process(ImageUploadContext context) throws ProcessException {
         List<ImageUploadData> result = new ArrayList<>();
 
         try {
-            for (FileAdapter file : request.getFiles()) {
+            for (FileAdapter file : context.getFiles()) {
                 log.debug("Processing file: name={}, size={} bytes",
                         file.getOriginalFilename(), file.getSize());
 
                 FileMetadata fileMetadata = metadataService.extractFileMetadata(file);
                 ImageMetadata imageMetadata = metadataService.extractImageMetadata(file);
 
-                // todo: ha med ett uploadedVia-fält i request DTO:n för webb/app?
+                // todo: ha med ett uploadedVia-fält i context DTO:n för webb/app?
                 ImageUploadData imageData = ImageUploadData.builder()
-                        .userId(request.getUserId())
-                        .cameraId(request.getCameraId())
+                        .userId(context.getUserId())
+                        .cameraId(context.getCameraId())
                         .sourceType(this.getSourceType().name().toLowerCase())
                         .buffer(file.getBytes())
                         .imageMetadata(imageMetadata)

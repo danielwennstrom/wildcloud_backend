@@ -8,7 +8,7 @@ import java.util.List;
 
 @Data
 @Builder
-public class UploadRequest {
+public class ImageUploadContext {
     private String userId;
     private String cameraId;
     private List<FileAdapter> files;

@@ -2,8 +2,8 @@ package org.wildcloud.wildcloud_backend.processor;
 
 import org.wildcloud.wildcloud_backend.enums.SourceType;
 import org.wildcloud.wildcloud_backend.exception.ProcessException;
+import org.wildcloud.wildcloud_backend.model.ImageUploadContext;
 import org.wildcloud.wildcloud_backend.model.ImageUploadData;
-import org.wildcloud.wildcloud_backend.model.UploadRequest;
 
 import java.util.List;
 
@@ -15,7 +15,7 @@ import java.util.List;
  * @see DirectUploadProcessor for an example implementation.
  */
 public interface ImageProcessor {
-    List<ImageUploadData> process(UploadRequest request) throws ProcessException;
+    List<ImageUploadData> process(ImageUploadContext context) throws ProcessException;
 
     SourceType getSourceType();
 }
