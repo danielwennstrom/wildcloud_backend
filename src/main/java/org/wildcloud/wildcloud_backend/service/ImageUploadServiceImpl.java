@@ -1,8 +1,6 @@
 package org.wildcloud.wildcloud_backend.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -24,7 +22,6 @@ import org.wildcloud.wildcloud_backend.repository.ImageRepository;
 import org.wildcloud.wildcloud_backend.validator.ImageValidator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 import java.util.List;
 import java.util.Map;
@@ -43,7 +40,7 @@ public class ImageUploadServiceImpl implements ImageUploadService {
     private final StorageService storageService;
     private final ObjectMapper objectMapper;
     // TODO: implementera events, kan användas till notifications etc.
-//    private final ApplicationEventPublisher eventPublisher;
+    //    private final ApplicationEventPublisher eventPublisher;
 
     public Mono<UploadSummary> processUpload(SourceType sourceType, ImageUploadContext context) {
         log.info("processUpload started for sourceType: {}", sourceType);
@@ -56,18 +53,18 @@ public class ImageUploadServiceImpl implements ImageUploadService {
         return Mono.fromCallable(() -> processor.process(context))
                 .flatMapMany(imageDataList ->
                         Flux.fromIterable(imageDataList)
-                                .flatMap(data ->
-                                                uploadSingleImage(data)
-                                                        .map(img -> UploadResult.success(data.getFileMetadata().getFileName()))
-                                                        .onErrorResume(e -> Mono.just(
-                                                                UploadResult.failure(
-                                                                        data.getFileMetadata().getOriginalFileName(),
-                                                                        e.getMessage()
-                                                                )
-                                                        )),
-                                        5 // concurrency
-                                )
-                )
+                                .flatMap(fileData -> validate(fileData)
+                                        .flatMap(this::uploadSingleImage)
+                                        .map(uploadedImage -> UploadResult.success(uploadedImage.getFileMetadata().getFileName()))
+                                        .doOnError(e -> log.error("Error processing file: {}",
+                                                fileData.getFileMetadata().getOriginalFileName(), e))
+                                        .onErrorResume(e -> Mono.just(
+                                                UploadResult.failure(
+                                                        fileData.getFileMetadata().getOriginalFileName(),
+                                                        e.getMessage()
+                                                )
+                                        )), 5 // concurrency
+                                ))
                 .collectList()
                 .map(results -> {
                     Map<Boolean, List<UploadResult>> partitioned = results.stream()
@@ -81,44 +78,47 @@ public class ImageUploadServiceImpl implements ImageUploadService {
                 .onErrorMap(e -> new UploadException("Upload failed", e));
     }
 
-
     public Mono<Image> uploadSingleImage(ImageUploadData data) {
-        return Mono.fromCallable(() -> {
-                    for (ImageValidator v : validators) {
-                        v.validate(data);
-                    }
-                    return data;
-                })
-                .subscribeOn(Schedulers.boundedElastic())
-                .flatMap(validatedData -> {
-                    String imageKey = buildImageKey(data);
+        return Mono.just(data)
+                .flatMap(d -> {
+                    String storageKey = buildStorageKey(d);
 
-                    return storageService.uploadImage(imageKey,
-                                    validatedData.getBuffer(),
-                                    validatedData.getFileMetadata().getContentType())
-                            .then(Mono.fromCallable(() -> buildImageCreateData(validatedData, imageKey)));
+                    return storageService.uploadImage(storageKey,
+                                    d.getBuffer(),
+                                    d.getFileMetadata().getContentType())
+                            .then(Mono.fromCallable(() -> buildImage(d, storageKey)));
                 })
                 .flatMap(this::saveImageWithMetadata)
                 .onErrorMap(RuntimeException.class, e ->
                         new UploadException("Failed to upload " + data.getFileMetadata().getFileName(), e));
     }
 
-    private Mono<Image> saveImageWithMetadata(ImageCreateData createData) {
-        return imageRepository.save(createData.getImage())
-                .flatMap(savedEntity -> {
-                    createData.getFileMetadata().setImageId(savedEntity.getId());
-                    createData.getImageMetadata().setImageId(savedEntity.getId());
+    private Mono<ImageUploadData> validate(ImageUploadData data) {
+        return Mono.fromCallable(() -> {
+            for (ImageValidator v : validators) {
+                v.validate(data);
+            }
+            return data;
+        });
+    }
 
-                    Mono<FileMetadata> savedFileMetadata = fileMetadataRepository.save(createData.getFileMetadata());
-                    Mono<ImageMetadata> savedImageMetadata = imageMetadataRepository.save(createData.getImageMetadata());
+    private Mono<Image> saveImageWithMetadata(Image image) {
+        return imageRepository.save(image)
+                .flatMap(savedEntity -> {
+                    image.getFileMetadata().setImageId(savedEntity.getId());
+                    image.getImageMetadata().setImageId(savedEntity.getId());
+
+                    Mono<FileMetadata> savedFileMetadata = fileMetadataRepository.save(image.getFileMetadata());
+                    Mono<ImageMetadata> savedImageMetadata = imageMetadataRepository.save(image.getImageMetadata());
 
                     return Mono.zip(savedFileMetadata, savedImageMetadata)
                             .map(tuple -> savedEntity);
                 })
-                .onErrorMap(e -> new RuntimeException("Failed to save image to database: " + createData.fileMetadata.getOriginalFileName()));
+                .onErrorMap(e -> new RuntimeException("Failed to save image to database: "
+                        + image.getFileMetadata().getOriginalFileName()));
     }
 
-    private String buildImageKey(ImageUploadData imageData) {
+    private String buildStorageKey(ImageUploadData imageData) {
         return String.format("images/%s/%s/%s",
                 Objects.toString(imageData.getUserId(), "null"),
                 Objects.toString(imageData.getCameraId(), "null"),
@@ -126,7 +126,7 @@ public class ImageUploadServiceImpl implements ImageUploadService {
         );
     }
 
-    private ImageCreateData buildImageCreateData(ImageUploadData data, String imageKey) {
+    private Image buildImage(ImageUploadData data, String imageKey) {
         String sourceMetadataJson = null;
         if (data.getSourceMetadata() != null && !data.getSourceMetadata().isEmpty()) {
             try {
@@ -137,25 +137,14 @@ public class ImageUploadServiceImpl implements ImageUploadService {
             }
         }
 
-        Image image = Image.builder()
+        return Image.builder()
                 .userId(data.getUserId())
                 .cameraId(data.getCameraId())
                 .sourceType(data.getSourceType())
                 .sourceMetadata(sourceMetadataJson)
                 .storageKey(imageKey)
+                .imageMetadata(data.getImageMetadata())
+                .fileMetadata(data.getFileMetadata())
                 .build();
-
-        FileMetadata fileMetadata = data.getFileMetadata();
-        ImageMetadata imageMetadata = data.getImageMetadata();
-
-        return new ImageCreateData(image, fileMetadata, imageMetadata);
-    }
-
-    @Data
-    @AllArgsConstructor
-    private static class ImageCreateData {
-        private Image image;
-        private FileMetadata fileMetadata;
-        private ImageMetadata imageMetadata;
     }
 }
