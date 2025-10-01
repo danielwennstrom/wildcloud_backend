@@ -17,7 +17,7 @@ import java.util.Map;
 
 @RestController
 @CrossOrigin(origins = "http://localhost:8081")
-@RequestMapping("/api/users")
+@RequestMapping("/api/AuthenticateUsers")
 @RequiredArgsConstructor
 public class AuthenticationController {
 
@@ -27,6 +27,7 @@ public class AuthenticationController {
 
     @PostMapping("/createUser")
     public Mono<ResponseEntity<UserDTO>> registerUser(@Valid @RequestBody UserRequestDTO userRequestDTO) {
+        System.out.println("Received user registration request: " + userRequestDTO);
         return userService.registerUser(userRequestDTO)
                 .map(ResponseEntity::ok)
                 .onErrorResume(e -> {
