@@ -46,7 +46,6 @@ public class LocalStorageService implements StorageService {
             }
 
             Path targetFile = uploadDir.resolve(key);
-            log.info("Local URL: {}", key);
 
             return targetFile.toUri().toString();
         } catch (IOException e) {
