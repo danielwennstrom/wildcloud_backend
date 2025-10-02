@@ -67,7 +67,7 @@ public class CameraController {
 
     @GetMapping("/getCameraByCameraEmail/{cameraEmail}")
     public Mono<CameraDTO> findCameraByCameraEmail(@PathVariable String cameraEmail) {
-        return cameraService.findCameraByEmail(cameraEmail)
+        return cameraService.findByEmail(cameraEmail)
                 .doOnSuccess(response -> System.out.println("Camera found: " + cameraEmail))
                 .doOnError(error -> System.err.println("Error finding camera: " + error.getMessage()));
     }
@@ -75,7 +75,7 @@ public class CameraController {
     @DeleteMapping("/deleteCameraByCameraEmail/{cameraEmail}")
     public Mono<ResponseEntity<Boolean>> deleteCameraByCameraEmail(@PathVariable @Email String cameraEmail) {
 
-        return cameraService.deleteCamera(cameraEmail)
+        return cameraService.deleteByEmail(cameraEmail)
                 .then(Mono.just(ResponseEntity.ok(true)));
     }
 

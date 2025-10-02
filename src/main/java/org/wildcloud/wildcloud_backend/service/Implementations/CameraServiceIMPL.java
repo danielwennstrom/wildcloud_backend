@@ -5,10 +5,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.wildcloud.wildcloud_backend.dto.CameraDTO;
 import org.wildcloud.wildcloud_backend.dto.CameraRequestDTO;
+import org.wildcloud.wildcloud_backend.dto.UserDTO;
 import org.wildcloud.wildcloud_backend.entity.CameraInfo;
 import org.wildcloud.wildcloud_backend.exception.custom.CameraNotFoundException;
 import org.wildcloud.wildcloud_backend.exception.custom.EmailTakenException;
 import org.wildcloud.wildcloud_backend.repository.CameraRepository;
+import org.wildcloud.wildcloud_backend.repository.RelationRepository.UserCameraRepository;
+import org.wildcloud.wildcloud_backend.repository.UserRepository;
 import org.wildcloud.wildcloud_backend.service.CameraService;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -18,10 +21,13 @@ import reactor.core.publisher.Mono;
 public class CameraServiceIMPL implements CameraService {
 
     private final CameraRepository cameraRepository;
+    private final UserCameraRepository userCameraRepository;
+    private  final UserRepository userRepository;
 
-
-    public CameraServiceIMPL(CameraRepository cameraRepository) {
+    public CameraServiceIMPL(CameraRepository cameraRepository, UserCameraRepository userCameraRepository, UserRepository userRepository) {
         this.cameraRepository = cameraRepository;
+        this.userCameraRepository = userCameraRepository;
+        this.userRepository = userRepository;
     }
 
 
@@ -34,15 +40,16 @@ public class CameraServiceIMPL implements CameraService {
     }
 
     @Override
-    public Mono<CameraDTO> findCameraByEmail(String cameraEmail) {
+    public Mono<CameraDTO> findByEmail(String cameraEmail) {
         log.info("Finding camera with email: {}", cameraEmail);
         return cameraRepository.findByCameraEmail(cameraEmail)
                 .switchIfEmpty(Mono.error(new CameraNotFoundException("Camera with email " + cameraEmail + " not found")))
                 .map(this::buildCameraDTO);
+
     }
 
     @Override
-    public Mono<CameraDTO> findCameraById(Long cameraId) {
+    public Mono<CameraDTO> findById(Long cameraId) {
         log.info("Finding camera with Id: {}", cameraId);
         return cameraRepository.findById(cameraId)
                 .switchIfEmpty(Mono.error(new CameraNotFoundException("Camera with Id " + cameraId + " not found")))
@@ -85,7 +92,7 @@ public class CameraServiceIMPL implements CameraService {
     }
 
     @Override
-    public Mono<Void> deleteCamera(String cameraEmail) {
+    public Mono<Void> deleteByEmail(String cameraEmail) {
         return cameraRepository.findByCameraEmail(cameraEmail)
                 .switchIfEmpty(Mono.error(new CameraNotFoundException("Camera with email " + cameraEmail + " not found")))
                 .flatMap(cameraInfo -> {

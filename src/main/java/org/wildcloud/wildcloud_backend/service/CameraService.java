@@ -10,14 +10,16 @@ public interface CameraService {
 
     Flux<CameraDTO> findAllCameras();
 
-    Mono<CameraDTO> findCameraByEmail(String cameraEmail);
+    Mono<CameraDTO> findByEmail(String cameraEmail);
 
-    Mono<CameraDTO> findCameraById(Long cameraId);
+    Mono<CameraDTO> findById(Long cameraId);
 
     Mono<CameraDTO> registerCamera(CameraRequestDTO cameraRequestDTO);
 
     Mono<CameraDTO> updateCamera(CameraRequestDTO cameraRequestDTO, String cameraEmail);
 
-    Mono<Void> deleteCamera(String cameraEmail);
+    Mono<Void> deleteByEmail(String cameraEmail);
+
+
 
 }

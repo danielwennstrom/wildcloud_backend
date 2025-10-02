@@ -10,7 +10,7 @@ import java.util.Set;
 @Builder
 public class UserDTO {
 
-    Long id;
+    Long userId;
     String userEmail;
     String firstName;
     String lastName;
