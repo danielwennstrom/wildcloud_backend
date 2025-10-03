@@ -51,16 +51,16 @@ public class ImageUploadServiceImpl implements ImageUploadService {
         }
 
         return Mono.fromCallable(() -> processor.process(context))
-                .flatMapMany(imageDataList ->
-                        Flux.fromIterable(imageDataList)
-                                .flatMap(fileData -> validate(fileData)
+                .flatMapMany(imageUploadDataList ->
+                        Flux.fromIterable(imageUploadDataList)
+                                .flatMap(imageUploadData -> validate(imageUploadData)
                                         .flatMap(this::uploadSingleImage)
                                         .map(uploadedImage -> UploadResult.success(uploadedImage.getFileMetadata().getFileName()))
                                         .doOnError(e -> log.error("Error processing file: {}",
-                                                fileData.getFileMetadata().getOriginalFileName(), e))
+                                                imageUploadData.getFileMetadata().getOriginalFileName(), e))
                                         .onErrorResume(e -> Mono.just(
                                                 UploadResult.failure(
-                                                        fileData.getFileMetadata().getOriginalFileName(),
+                                                        imageUploadData.getFileMetadata().getOriginalFileName(),
                                                         e.getMessage()
                                                 )
                                         )), 5 // concurrency
@@ -90,7 +90,7 @@ public class ImageUploadServiceImpl implements ImageUploadService {
                 })
                 .flatMap(this::saveImageWithMetadata)
                 .onErrorMap(RuntimeException.class, e ->
-                        new UploadException("Failed to upload " + data.getFileMetadata().getFileName(), e));
+                        new UploadException("Failed to upload: " + data.getFileMetadata().getFileName(), e));
     }
 
     private Mono<ImageUploadData> validate(ImageUploadData data) {
