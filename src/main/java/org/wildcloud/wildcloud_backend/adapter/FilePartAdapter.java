@@ -2,7 +2,7 @@ package org.wildcloud.wildcloud_backend.adapter;
 
 import org.wildcloud.wildcloud_backend.domain.FileAdapter;
 
-public record MultipartFileAdapter(
+public record FilePartAdapter(
         String filename,
         String contentType,
         byte[] bytes,

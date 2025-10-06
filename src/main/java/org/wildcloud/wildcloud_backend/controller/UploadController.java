@@ -6,7 +6,7 @@ import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.web.bind.annotation.*;
-import org.wildcloud.wildcloud_backend.adapter.MultipartFileAdapter;
+import org.wildcloud.wildcloud_backend.adapter.FilePartAdapter;
 import org.wildcloud.wildcloud_backend.domain.FileAdapter;
 import org.wildcloud.wildcloud_backend.dto.UploadRequestDto;
 import org.wildcloud.wildcloud_backend.enums.SourceType;
@@ -35,7 +35,7 @@ public class UploadController {
                             byte[] bytes = new byte[buffer.readableByteCount()];
                             buffer.read(bytes);
                             DataBufferUtils.release(buffer);
-                            return (FileAdapter) new MultipartFileAdapter(
+                            return (FileAdapter) new FilePartAdapter(
                                     filePart.filename(),
                                     Objects.requireNonNull(filePart.headers().getContentType()).toString(),
                                     bytes,
