@@ -3,7 +3,7 @@ package org.wildcloud.wildcloud_backend.validator;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.wildcloud.wildcloud_backend.config.UploadConfig;
-import org.wildcloud.wildcloud_backend.exception.ValidationException;
+import org.wildcloud.wildcloud_backend.exception.custom.ValidationException;
 import org.wildcloud.wildcloud_backend.model.ImageUploadData;
 
 @Component

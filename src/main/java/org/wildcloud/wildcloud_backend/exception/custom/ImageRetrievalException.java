@@ -1,4 +1,4 @@
-package org.wildcloud.wildcloud_backend.exception;
+package org.wildcloud.wildcloud_backend.exception.custom;
 
 public class ImageRetrievalException extends RuntimeException {
     public ImageRetrievalException(String message, Throwable cause) {

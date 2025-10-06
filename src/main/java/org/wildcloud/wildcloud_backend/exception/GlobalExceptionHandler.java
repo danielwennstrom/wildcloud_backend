@@ -11,6 +11,10 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+    @ExceptionHandler(ProcessException.class)
+    public ResponseEntity<Map<String, Object>> handleUploadProcessingFailed(ProcessException ex) {
+        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
+    }
 
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleUserNotFound(UserNotFoundException ex) {

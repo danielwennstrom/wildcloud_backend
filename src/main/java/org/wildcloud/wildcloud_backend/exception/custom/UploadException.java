@@ -1,4 +1,4 @@
-package org.wildcloud.wildcloud_backend.exception;
+package org.wildcloud.wildcloud_backend.exception.custom;
 
 public class UploadException extends RuntimeException {
     public UploadException(String message, Throwable cause) {

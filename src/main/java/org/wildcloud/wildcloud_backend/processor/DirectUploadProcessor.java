@@ -7,7 +7,7 @@ import org.wildcloud.wildcloud_backend.domain.FileAdapter;
 import org.wildcloud.wildcloud_backend.entity.FileMetadata;
 import org.wildcloud.wildcloud_backend.entity.ImageMetadata;
 import org.wildcloud.wildcloud_backend.enums.SourceType;
-import org.wildcloud.wildcloud_backend.exception.ProcessException;
+import org.wildcloud.wildcloud_backend.exception.custom.ProcessException;
 import org.wildcloud.wildcloud_backend.model.ImageUploadContext;
 import org.wildcloud.wildcloud_backend.model.ImageUploadData;
 import org.wildcloud.wildcloud_backend.service.metadata.MetadataService;

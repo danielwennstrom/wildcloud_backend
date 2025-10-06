@@ -1,4 +1,4 @@
-package org.wildcloud.wildcloud_backend.exception;
+package org.wildcloud.wildcloud_backend.exception.custom;
 
 public class ValidationException extends RuntimeException {
     public ValidationException(String message, Throwable cause) {

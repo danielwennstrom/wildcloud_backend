@@ -1,4 +1,4 @@
-package org.wildcloud.wildcloud_backend.exception;
+package org.wildcloud.wildcloud_backend.exception.custom;
 
 public class ProcessException extends RuntimeException {
     public ProcessException(String message, Throwable cause) {
