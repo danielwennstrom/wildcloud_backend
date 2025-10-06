@@ -45,6 +45,18 @@ CREATE TABLE image_metadata
             ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS user_info
+(
+    id           SERIAL PRIMARY KEY,
+    user_email   VARCHAR(255) UNIQUE NOT NULL,
+    password     VARCHAR(255)        NOT NULL,
+    first_name   VARCHAR(255),
+    last_name    VARCHAR(255),
+    phone_number BIGINT,
+    created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Comments for documentation
 COMMENT ON TABLE images IS 'Main table for storing image entity information';
 COMMENT ON TABLE file_metadata IS 'File-specific metadata for images';

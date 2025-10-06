@@ -7,16 +7,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.wildcloud.wildcloud_backend.dto.UserDTO;
 import org.wildcloud.wildcloud_backend.dto.UserLoginDTO;
-import org.wildcloud.wildcloud_backend.dto.UserLogoutDTO;
 import org.wildcloud.wildcloud_backend.dto.UserRequestDTO;
-import org.wildcloud.wildcloud_backend.entity.CameraInfo;
-import org.wildcloud.wildcloud_backend.service.Implementations.UserServiceIMPL;
 import org.wildcloud.wildcloud_backend.service.UserService;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 //              !!!!!!!!!!!!!OBS!!!!!!!!!!!
 //KOM IHÅG ATT LÄGGA TILL NYA ENDPOINTS TILL SECURITYCONFIGURATION
@@ -26,7 +22,6 @@ import java.util.Set;
 @RestController
 @CrossOrigin(origins = "http://localhost:8081")
 @RequestMapping("/api/users")
-@CrossOrigin(origins = "http://localhost:8080")
 public class UserController {
 
 
