@@ -10,10 +10,14 @@ import org.springframework.util.unit.DataSize;
 public class UploadConfig {
     private final DataSize minFileSize;
     private final DataSize maxFileSize;
+    private final int uploadConcurrencyLimit;
+    private final int retrievalConcurrencyLimit;
 
     @ConstructorBinding
-    public UploadConfig(DataSize minFileSize, DataSize maxFileSize) {
+    public UploadConfig(DataSize minFileSize, DataSize maxFileSize, int uploadConcurrencyLimit, int retrievalConcurrencyLimit) {
         this.minFileSize = minFileSize;
         this.maxFileSize = maxFileSize;
+        this.uploadConcurrencyLimit = uploadConcurrencyLimit;
+        this.retrievalConcurrencyLimit = retrievalConcurrencyLimit;
     }
 }

@@ -1,6 +1,5 @@
 package org.wildcloud.wildcloud_backend.service;
 
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
@@ -9,9 +8,11 @@ import org.wildcloud.wildcloud_backend.dto.ImageResponseDto;
 import org.wildcloud.wildcloud_backend.entity.FileMetadata;
 import org.wildcloud.wildcloud_backend.entity.Image;
 import org.wildcloud.wildcloud_backend.entity.ImageMetadata;
+import org.wildcloud.wildcloud_backend.mapper.ImageMapper;
 import org.wildcloud.wildcloud_backend.repository.FileMetadataRepository;
 import org.wildcloud.wildcloud_backend.repository.ImageMetadataRepository;
 import org.wildcloud.wildcloud_backend.repository.ImageRepository;
+import org.wildcloud.wildcloud_backend.service.storage.StorageService;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -23,10 +24,11 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class ImageServiceImpl implements ImageService {
+    private final StorageService storageService;
     private final ImageRepository imageRepository;
     private final ImageMetadataRepository imageMetadataRepository;
     private final FileMetadataRepository fileMetadataRepository;
-    private final StorageService storageService;
+    private final ImageMapper imageMapper;
 
     // TODO: userId kanske ska användas till access control eller liknande?
     @Override
@@ -54,13 +56,7 @@ public class ImageServiceImpl implements ImageService {
                                 Map<Long, FileMetadata> fileMetaMap = tuple.getT2().stream()
                                         .collect(Collectors.toMap(FileMetadata::getImageId, m -> m));
 
-                                return Flux.fromIterable(images)
-                                        .map(image -> new ImageWithMetadataHolder(
-                                                image,
-                                                imageMetaMap.get(image.getId()),
-                                                fileMetaMap.get(image.getId())
-                                        ))
-                                        .flatMap(this::addPresignedUrlAndMapToDto, 10);
+                                return imageMapper.mapToDtos(images, imageMetaMap, fileMetaMap);
                             });
                 });
     }
@@ -73,23 +69,5 @@ public class ImageServiceImpl implements ImageService {
                         imageRepository.deleteById(image.getId())
                                 .then(storageService.deleteImage(image.getStorageKey()))
                 );
-    }
-
-    private Mono<ImageResponseDto> addPresignedUrlAndMapToDto(ImageWithMetadataHolder holder) {
-        String storageKey = holder.image.getStorageKey();
-        return Mono.fromCallable(() -> storageService.retrieveImage(storageKey))
-                .map(url -> ImageResponseDto.builder()
-                        .id(holder.image.getId())
-                        .imageMetadata(holder.imageMetadata)
-                        .fileMetadata(holder.fileMetadata)
-                        .url(url)
-                        .build());
-    }
-
-    @AllArgsConstructor
-    private static class ImageWithMetadataHolder {
-        private Image image;
-        private ImageMetadata imageMetadata;
-        private FileMetadata fileMetadata;
     }
 }

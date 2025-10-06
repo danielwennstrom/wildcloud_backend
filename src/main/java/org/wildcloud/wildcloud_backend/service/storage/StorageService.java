@@ -1,4 +1,4 @@
-package org.wildcloud.wildcloud_backend.service;
+package org.wildcloud.wildcloud_backend.service.storage;
 
 import reactor.core.publisher.Mono;
 
