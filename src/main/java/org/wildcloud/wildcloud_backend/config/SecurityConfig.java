@@ -23,9 +23,10 @@ public class SecurityConfig {
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
         return http
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
+                //.cors(ServerHttpSecurity.CorsSpec::disable)
                 .authorizeExchange(exchanges -> exchanges
-                        .pathMatchers("/api/AuthenticateUsers/createUser", "/api/AuthenticateUsers/login").permitAll()
-                        .anyExchange().authenticated()
+                        .pathMatchers("/api/**").permitAll()
+                        //.anyExchange().authenticated()
                 )
                 .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
                 .formLogin(ServerHttpSecurity.FormLoginSpec::disable)

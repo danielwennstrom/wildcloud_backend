@@ -16,7 +16,6 @@ import reactor.core.publisher.Mono;
 import java.util.Map;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:8081")
 @RequestMapping("/api/AuthenticateUsers")
 @RequiredArgsConstructor
 public class AuthenticationController {
@@ -40,6 +39,7 @@ public class AuthenticationController {
 
     @PostMapping("/login")
     public Mono<ResponseEntity<Map<String, Object>>> loginUser(@Valid @RequestBody UserLoginDTO userLoginDTO) {
+        System.out.println("Received login request for user: " + userLoginDTO.getEmail());
         return userService.loginUser(userLoginDTO)
                 .flatMap(userDTO -> refreshTokenService.createRefreshToken(userDTO.getId())
                         .map(refreshToken -> {
@@ -48,7 +48,8 @@ public class AuthenticationController {
                                     "user", userDTO,
                                     "accessToken", accessToken,
                                     "refreshToken", refreshToken.getToken(),
-                                    "tokenType", "Bearer"
+                                    "tokenType", "Bearer",
+                                    "id", userDTO.getId()
                             ));
                         }));
     }

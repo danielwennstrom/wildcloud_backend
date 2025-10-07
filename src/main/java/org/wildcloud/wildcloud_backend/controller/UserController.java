@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:8081")
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
 public class UserController {
@@ -77,6 +76,12 @@ public class UserController {
             .map(ResponseEntity::ok);
     }
 
+    @GetMapping("/getUserById/{userId}")
+    public Mono<ResponseEntity<UserDTO>> getUserById(@PathVariable("userId") Long userId) {
+        return userService.findById(userId)
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.notFound().build());
+    }
 
 
     // todo: log out endpoint(tamas)
