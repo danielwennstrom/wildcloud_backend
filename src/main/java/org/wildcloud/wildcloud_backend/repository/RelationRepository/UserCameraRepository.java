@@ -11,11 +11,11 @@ import reactor.core.publisher.Mono;
 public interface UserCameraRepository extends ReactiveCrudRepository<UserCamera,Long> {
 
     Flux<UserCamera> findByUserId(Long userId);
-    Flux<UserCamera> findByCameraId(Long cameraId);
-    Mono<Void> deleteByUserIdAndCameraId(Long userId, Long cameraId);
-    Mono<Object> findByUserIdAndCameraId(Long userId, Long cameraId);
+    Flux<UserCamera> findByCameraId(Long id);
+    Mono<Void> deleteByUserIdAndCameraId(Long userId, Long id);
+    Mono<UserCamera> findByUserIdAndCameraId(Long userId, Long id);
 
 
     Mono<Void> deleteByUserId(Long userId);
-    Mono<Void> deleteByCameraId(Long cameraId);
+    Mono<Void> deleteByCameraId(Long id);
 }

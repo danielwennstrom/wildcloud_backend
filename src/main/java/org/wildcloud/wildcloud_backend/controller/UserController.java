@@ -90,7 +90,7 @@ public class UserController {
     public Mono<ResponseEntity<Boolean>> deleteUser(@PathVariable String userEmail) {
         return userService.deleteUser(userEmail)
                 .thenReturn(ResponseEntity.ok(true))
-                .onErrorReturn(ResponseEntity.ok(false));
+                .onErrorReturn(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(false));
 
 
     }

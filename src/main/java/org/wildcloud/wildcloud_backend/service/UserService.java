@@ -4,6 +4,7 @@ import org.wildcloud.wildcloud_backend.dto.CameraDTO;
 import org.wildcloud.wildcloud_backend.dto.UserDTO;
 import org.wildcloud.wildcloud_backend.dto.UserLoginDTO;
 import org.wildcloud.wildcloud_backend.dto.UserRequestDTO;
+import org.wildcloud.wildcloud_backend.entity.UserInfo;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.netty.ChannelPipelineConfigurer;
@@ -30,11 +31,9 @@ public interface UserService {
 
     Mono<Void> logoutUser(String userEmail);
 
-    Mono<Void> assignCameraToUser(Long cameraId, String userEmail);
-
-    Flux<CameraDTO> getUserCameras(String userEmail);
-
-    Flux<UserDTO> findUsersByCameraEmail(String cameraEmail);
+    Mono<Void> assignCameraToUser(String cameraEmail, String userEmail);
 
     Mono<Void> unlinkCameraFromUser(String userEmail, Long cameraId);
+
+    Flux<CameraDTO> getCamerasByUserId(Long userId);
 }

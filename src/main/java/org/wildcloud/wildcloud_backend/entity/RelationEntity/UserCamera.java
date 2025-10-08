@@ -18,14 +18,18 @@ public class UserCamera {
 
     @Id
     private Long id;
+
     @Column("user_id")
     private Long userId;
+
     @Column("camera_id")
     private Long cameraId;
+
     @Column("role")
     private String role;
-    @Column("camera_email")
-    private String cameraEmail;
+
+
+
 
 
 

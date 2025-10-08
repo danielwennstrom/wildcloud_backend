@@ -49,20 +49,19 @@ public class CameraServiceIMPL implements CameraService {
     }
 
     @Override
-    public Mono<CameraDTO> findById(Long cameraId) {
+    public Mono<CameraInfo> findById(Long cameraId) {
         log.info("Finding camera with Id: {}", cameraId);
         return cameraRepository.findById(cameraId)
-                .switchIfEmpty(Mono.error(new CameraNotFoundException("Camera with Id " + cameraId + " not found")))
-                .map(this::buildCameraDTO);
+                .switchIfEmpty(Mono.error(new CameraNotFoundException("Camera with Id " + cameraId + " not found")));
     }
 
     @Override
     public Mono<CameraDTO> registerCamera(CameraRequestDTO cameraRequestDTO) {
-        try {
             return cameraRepository.existsByCameraEmail(cameraRequestDTO.getCameraEmail())
+
                     .flatMap(exists -> {
                         if (Boolean.TRUE.equals(exists)) {
-                            return Mono.error(new EmailTakenException("There is a already a camera registered with: " + cameraRequestDTO.getCameraEmail()));
+                            return Mono.error(new EmailTakenException("Camera email " + cameraRequestDTO.getCameraEmail() + " is already taken"));
                         }
                         CameraInfo newCamera = CameraInfo.builder()
                                 .cameraEmail(cameraRequestDTO.getCameraEmail())
@@ -72,10 +71,6 @@ public class CameraServiceIMPL implements CameraService {
                                 .map(this::buildCameraDTO)
                                 .doOnError(c -> System.err.println("Error saving camera: " + cameraRequestDTO));
                     });
-        } catch (Exception e) {
-            log.error("Error saving camera: {}", e, e);
-            return Mono.error(e);
-        }
     }
 
     @Override

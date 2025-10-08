@@ -21,7 +21,7 @@ public class CameraInfo {
 
     @Id
     @Column
-    private Long id;
+    private Long Id;
 
     @Email
     @NotNull
@@ -36,7 +36,7 @@ public class CameraInfo {
     @Override
     public String toString() {
         return "CameraInfo{" +
-                "cameraId=" + id +
+                "cameraId=" + Id +
                 ", cameraEmail='" + cameraEmail + '\'' +
                 ", cameraName='" + cameraName + '\'' +
                 '}';

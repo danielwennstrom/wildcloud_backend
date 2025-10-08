@@ -1,6 +1,8 @@
 package org.wildcloud.wildcloud_backend.exception.validator;
 
 
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -8,13 +10,16 @@ import org.wildcloud.wildcloud_backend.entity.UserInfo;
 import org.wildcloud.wildcloud_backend.exception.custom.*;
 import org.wildcloud.wildcloud_backend.repository.UserRepository;
 import reactor.core.publisher.Mono;
+import reactor.netty.ChannelPipelineConfigurer;
+
+import java.util.Optional;
 
 @Component
 @Slf4j
 public class UserValidation {
 
     private final PasswordEncoder passwordEncoder;
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
     public UserValidation(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
@@ -53,13 +58,25 @@ public class UserValidation {
     }
 
 
-    public Mono<UserInfo> existsValidation(String email) {
+    public Mono<UserInfo> userExistsByEmailValidation(String email) {
         log.info("User exists validation: {}", email);
         return userRepository.findByUserEmail(email)
                 .switchIfEmpty(Mono.error(new UserNotFoundException("User with email " + email + " not found")))
-                .doOnSuccess(userExists -> log.info("User {} exists", email));
+                .doOnSuccess(userExistsByEmail -> log.info("User {} exists", email));
     }
 
+    public Mono<UserInfo> userExistsByIdValidation(Long userId) {
+        log.info("User exists validation: {}", userId);
+        return userRepository.findById(userId)
+                .switchIfEmpty(Mono.error(new UserNotFoundException("User with ID " + userId + " not found")))
+                .doOnSuccess(userExistsById -> log.info("User with ID {} exists", userId));
+    }
+    public Mono<UserInfo> userExistsByPhoneNumberValidation(Long phoneNumber) {
+        log.info("User exists validation: {}", phoneNumber);
+        return userRepository.findByPhoneNumber(phoneNumber)
+                .switchIfEmpty(Mono.error(new UserNotFoundException("User with phone number " + phoneNumber + " not found")))
+                .doOnSuccess(userExistsByPhoneNumber -> log.info("User with phone number {} exists", phoneNumber));
+    }
 
     public Mono<UserInfo> credentialsValidation(UserInfo user, String rawPassword) {
         log.info("User credential validation: {}", user.getUserEmail());

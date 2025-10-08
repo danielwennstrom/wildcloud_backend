@@ -14,7 +14,7 @@ public interface CameraRepository extends ReactiveCrudRepository<CameraInfo, Lon
 
     Mono<Boolean> existsByCameraEmail(String cameraEmail);
 
-    Flux<CameraInfo> findUserByCameraEmail(String cameraEmail);
+
 
     Mono<CameraInfo> findById(Long cameraId);
 

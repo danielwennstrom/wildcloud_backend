@@ -33,7 +33,9 @@ public class CameraController {
 
             return cameraService.registerCamera(cameraRequestDTO)
                     .map(createdCamera -> ResponseEntity.status(HttpStatus.CREATED).body(createdCamera))
-                    .doOnSuccess(success -> log.info("Camera registered: {}", cameraRequestDTO.getCameraEmail()))
+                    .doOnSuccess(success ->
+                            log.info("Camera registered: {}", success.getBody().getCameraEmail())
+                    )
                     .onErrorResume(error -> {
                         log.error("Error registering camera: {}", error.getMessage());
                         return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).build());
@@ -51,11 +53,6 @@ public class CameraController {
                 .collectList()
                 .map(foundCameras -> ResponseEntity.status(HttpStatus.OK).body(foundCameras))
                 .doOnSuccess(success -> {
-                    if (success.getBody() != null) {
-                        log.info("Cameras retrieved: {} cameras found", success.getBody().size());
-                    } else {
-                        log.info("No cameras found");
-                    }
                     log.info("All cameras retrieved: {} cameras found", success.getBody().size());
                 })
                 .onErrorResume(error -> {
@@ -68,15 +65,16 @@ public class CameraController {
     @GetMapping("/getCameraByCameraEmail/{cameraEmail}")
     public Mono<CameraDTO> findCameraByCameraEmail(@PathVariable String cameraEmail) {
         return cameraService.findByEmail(cameraEmail)
-                .doOnSuccess(response -> System.out.println("Camera found: " + cameraEmail))
-                .doOnError(error -> System.err.println("Error finding camera: " + error.getMessage()));
+                .doOnSuccess(response -> log.info("Camera found: {}", cameraEmail))
+                .doOnError(error -> log.info("Camera not found: {}", cameraEmail));
     }
 
     @DeleteMapping("/deleteCameraByCameraEmail/{cameraEmail}")
     public Mono<ResponseEntity<Boolean>> deleteCameraByCameraEmail(@PathVariable @Email String cameraEmail) {
 
-        return cameraService.deleteByEmail(cameraEmail)
-                .then(Mono.just(ResponseEntity.ok(true)));
+        return cameraService.deleteByEmail(cameraEmail) 
+        .thenReturn(ResponseEntity.ok(true))
+        .onErrorReturn(ResponseEntity.internalServerError().body(false));
     }
 
     @PutMapping("/updateCamera/{cameraEmail}")
@@ -86,6 +84,8 @@ public class CameraController {
                 .doOnError(error -> log.error("Error updating camera: {}", error.getMessage()))
                 .map(ResponseEntity::ok);
     }
+
+    // todo gör endpoint to get camera by id (tamas)
 
 
 }

@@ -1,15 +1,18 @@
 package org.wildcloud.wildcloud_backend.service.Implementations;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.annotation.Id;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.wildcloud.wildcloud_backend.dto.CameraDTO;
 import org.wildcloud.wildcloud_backend.dto.UserDTO;
 import org.wildcloud.wildcloud_backend.dto.UserLoginDTO;
 import org.wildcloud.wildcloud_backend.dto.UserRequestDTO;
+import org.wildcloud.wildcloud_backend.entity.CameraInfo;
 import org.wildcloud.wildcloud_backend.entity.RelationEntity.UserCamera;
 import org.wildcloud.wildcloud_backend.entity.UserInfo;
 import org.wildcloud.wildcloud_backend.exception.custom.UserNotFoundException;
+import org.wildcloud.wildcloud_backend.exception.validator.CameraValidation;
 import org.wildcloud.wildcloud_backend.exception.validator.UserValidation;
 import org.wildcloud.wildcloud_backend.repository.RelationRepository.UserCameraRepository;
 import org.wildcloud.wildcloud_backend.repository.UserRepository;
@@ -29,13 +32,17 @@ public class UserServiceIMPL implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final CameraService cameraService;
     private final UserCameraRepository userCameraRepository;
+    private final CameraValidation cameraValidation;
 
-    public UserServiceIMPL(UserRepository userRepository, UserValidation userValidation, PasswordEncoder passwordEncoder, CameraService cameraService, UserCameraRepository userCameraRepository) {
+    public UserServiceIMPL(UserRepository userRepository, UserValidation userValidation,
+                           PasswordEncoder passwordEncoder, CameraService cameraService,
+                           UserCameraRepository userCameraRepository, CameraValidation cameraValidation) {
         this.userRepository = userRepository;
         this.userValidation = userValidation;
         this.passwordEncoder = passwordEncoder;
         this.cameraService = cameraService;
         this.userCameraRepository = userCameraRepository;
+        this.cameraValidation = cameraValidation;
     }
 
     @Override
@@ -47,42 +54,36 @@ public class UserServiceIMPL implements UserService {
 
     @Override
     public Mono<UserDTO> findById(Long userId) {
-        return userRepository.findById(userId)
-                .switchIfEmpty(Mono.error(new UserNotFoundException("User with id " + userId + " not found")))
+        return userValidation.userExistsByIdValidation(userId)
                 .map(this::buildUserDTO);
     }
 
     @Override
     public Mono<UserDTO> findByUserEmail(String email) {
-        return userRepository.findByUserEmail(email)
-                .switchIfEmpty(Mono.error(new UserNotFoundException("User with email " + email + " not found")))
+        return userValidation.userExistsByEmailValidation(email)
                 .map(this::buildUserDTO);
     }
 
     @Override
     public Flux<UserDTO> findUsersByCameraId(Long cameraId) {
-        return cameraService.findById(cameraId)
-                .flatMapMany(cameraInfo -> userCameraRepository.findByCameraId(cameraId))
+        return userCameraRepository.findByCameraId(cameraId)
                 .flatMap(userCamera -> userRepository.findById(userCamera.getUserId()))
                 .map(this::buildUserDTO);
     }
 
     @Override
     public Mono<UserDTO> findByPhoneNumber(Long phoneNumber) {
-        return userRepository.findByPhoneNumber(phoneNumber)
-                .switchIfEmpty(Mono.error(new UserNotFoundException("User with phone number " + phoneNumber + " not found")))
+        return userValidation.userExistsByPhoneNumberValidation(phoneNumber)
                 .map(this::buildUserDTO);
     }
 
     @Override
     public Mono<UserDTO> registerUser(UserRequestDTO userRequestDTO) {
-
         log.info("Service method registerUser called with email: {}", userRequestDTO.getUserEmail());
 
         return userValidation.passwordValidation(userRequestDTO.getPassword())
                 .then(userValidation.emailValidation(userRequestDTO.getUserEmail()))
                 .then(Mono.defer(() -> {
-
                     log.info("Creating new user entity");
 
                     UserInfo newUser = UserInfo.builder()
@@ -97,36 +98,21 @@ public class UserServiceIMPL implements UserService {
                     return userRepository.save(newUser);
 
                 }))
-                        .doOnSuccess(savedUser -> log.info("User registered successfully with id: {}", savedUser.getId()))
-                .map(this::buildUserDTO)
-                        .onErrorMap(error -> {
-                            log.error("Error in user user registration: {}", error.getMessage(), error);
-                            return error;
-                        });
+                .map(this::buildUserDTO);
     }
 
     @Override
     public Mono<UserDTO> loginUser(UserLoginDTO userLoginDTO) {
         log.info("Service method loginUser called with email: {}", userLoginDTO.getUserEmail());
 
-        return userValidation.existsValidation(userLoginDTO.getUserEmail())
-                .flatMap(userInfo -> userValidation.credentialsValidation(userInfo, userLoginDTO.getPassword()))
-                .map(this::buildUserDTO)
-                .doOnSuccess(userDTO ->  log.info("User login successfully with email: {}", userDTO.getUserEmail()))
-                .onErrorMap(error -> {
-                    log.error("Error in user user login: {}", error.getMessage(), error);
-                    return error;
-                });
+        return userValidation.userExistsByEmailValidation(userLoginDTO.getUserEmail())
+                .map(this::buildUserDTO);
     }
 
     @Override
     public Mono<Void> logoutUser(String userEmail) {
-        return userRepository.findByUserEmail(userEmail)
-                .switchIfEmpty(Mono.error(new UserNotFoundException("User with email " + userEmail + " not found")))
-                .flatMap(userInfo -> {
-                    System.out.println("User " + userEmail + " logged out successfully");
-                    return Mono.empty();
-                });
+        return userValidation.userExistsByEmailValidation(userEmail)
+                .then();
     }
 
 
@@ -134,10 +120,19 @@ public class UserServiceIMPL implements UserService {
     public Mono<UserDTO> updateUser(UserRequestDTO userRequestDTO, String userEmail) {
 
 
-        return userRepository.findByUserEmail(userEmail)
-                .switchIfEmpty(Mono.error(new UserNotFoundException("User with email " + userEmail + " not found")))
+        return userValidation.userExistsByEmailValidation(userEmail)
                 .flatMap(userInfo -> {
-                    userInfo.setUserEmail(userRequestDTO.getUserEmail());
+                    if (!userEmail.equals(userRequestDTO.getUserEmail())) {
+                        return userRepository.findByUserEmail(userRequestDTO.getUserEmail())
+                                .flatMap(existsEmail -> Mono.error(
+                                        new IllegalArgumentException("Email " + userRequestDTO.getUserEmail() + " is already in use")
+                                ))
+                                .then(Mono.just(userInfo));
+                    }
+                    return (Mono.just(userInfo));
+                })
+                .flatMap(userInfo -> {
+                    userInfo.setUserEmail(userEmail);
                     userInfo.setFirstName(userRequestDTO.getFirstName());
                     userInfo.setLastName(userRequestDTO.getLastName());
                     userInfo.setPhoneNumber(userRequestDTO.getPhoneNumber());
@@ -149,16 +144,11 @@ public class UserServiceIMPL implements UserService {
 
     @Override
     public Mono<Void> deleteUser(String userEmail) {
-        return userExistsCheck(userEmail)
-                .flatMap(userInfo ->
-                        userRepository.deleteById(userInfo.getId())
-                );
+        return userValidation.userExistsByEmailValidation(userEmail)
+                .flatMap(userInfo -> userRepository.deleteById(userInfo.getId()));
     }
 
 
-    //------------------------ Camera related methods ------------------------
-    //------------------------ Camera related methods ------------------------
-    //------------------------ Camera related methods ------------------------
 
     private UserDTO buildUserDTO(UserInfo userInfo) {
         return UserDTO.builder()
@@ -178,36 +168,35 @@ public class UserServiceIMPL implements UserService {
         return userRepository.findByUserEmail(email)
                 .switchIfEmpty(Mono.error(new UserNotFoundException("User with email " + email + " not found")));
     }
-    @Override
-    public Mono<Void> assignCameraToUser(Long cameraId, String userEmail) {
-        return userExistsCheck(userEmail)
-                .flatMap(userInfo -> cameraService.findById(cameraId)
-                        .flatMap(cameraInfo -> userCameraRepository.findByUserIdAndCameraId(userInfo.getId(),cameraId)
-                                .flatMap(existingRelation -> Mono.error(new RuntimeException("Camera already assigned to user")))
-                                .switchIfEmpty(Mono.defer(() -> {
-                                    UserCamera userCamera = UserCamera.builder()
-                                            .userId(userInfo.getId())
-                                            .cameraId(cameraId)
-                                            .build();
-                                    return userCameraRepository.save(userCamera);
-                                }))
-                        )
-                ).then();
-    }
+
+    //------------------------ Camera related methods ------------------------
+    //------------------------ Camera related methods ------------------------
+    //------------------------ Camera related methods ------------------------
 
     @Override
-    public Flux<CameraDTO> getUserCameras(String userEmail) {
-        return userExistsCheck(userEmail)
+    public Mono<Void> assignCameraToUser(String cameraEmail, String userEmail) {
+        return userValidation.userExistsByEmailValidation(userEmail)
+                .zipWith(cameraValidation.cameraExistsByCameraEmailValidation(cameraEmail))
+                .flatMap(tuple -> {
+                    UserInfo userInfo = tuple.getT1();
+                    CameraInfo cameraInfo = tuple.getT2();
+                    return userCameraRepository.save(
+                            UserCamera.builder()
+                                    .userId(userInfo.getId())
+                                    .cameraId(cameraInfo.getId())
+                                    .build()
+                    );
+                })
+                .then();
+    }
+
+
+    @Override
+    public Flux<CameraDTO> getCamerasByUserId(Long userId) {
+        return userExistsCheck(userId)
                 .flatMapMany(user -> userCameraRepository.findByUserId(user.getId()))
-                .flatMap(userCamera -> cameraService.findById(userCamera.getCameraId()));
-    }
-
-    @Override
-    public Flux<UserDTO> findUsersByCameraEmail(String cameraEmail) {
-        return cameraService.findByEmail(cameraEmail)
-                .flatMapMany(camera -> userCameraRepository.findByCameraId(camera.getCameraId()))
-                .flatMap(userCamera -> userRepository.findById(userCamera.getUserId()))
-                .map(this::buildUserDTO);
+                .flatMap(userCamera -> cameraService.findById(userCamera.getCameraId()))
+                .map(this::buildCameraDTO);
     }
 
     @Override
@@ -215,6 +204,15 @@ public class UserServiceIMPL implements UserService {
         return userExistsCheck(userEmail)
                 .flatMap(user -> userCameraRepository.deleteByUserIdAndCameraId(user.getId(), cameraId));
     }
+
+    private CameraDTO buildCameraDTO(CameraInfo cameraInfo) {
+        return CameraDTO.builder()
+                .cameraEmail(cameraInfo.getCameraEmail())
+                .cameraName(cameraInfo.getCameraName())
+                .cameraId(cameraInfo.getId())
+                .build();
+    }
+
 
 }
 

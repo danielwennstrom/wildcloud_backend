@@ -27,18 +27,10 @@ public class SecurityConfig {
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .authorizeExchange(exchanges -> exchanges
                         .pathMatchers(
-                                "/api/users/createUser",
-//                                "/api/users/login",
-                                "/api/users/getAllUsers",
-                                "/api/users/updateUser/{userEmail}",
-                                "/api/users/deleteUser/{userEmail}",
-                                "/api/users/getUserByEmail/{userEmail}",
-                                "/api/users/getUserById/{userId}",
-                                "/api/users/getUserByPhoneNumber/{phoneNumber}",
-                                "/api/users/logout/{userEmail}",
-                                "/api/cameras/updateCamera/",
-                                "/api/cameras/**",
-                                "/api/relationships/**")
+                                 "/api/users/**",
+                                 "/api/cameras/**",
+                                 "/api/relationships/**"
+                                 )
                         // todo: Ta bort  senare efter testning.
                         .permitAll()
                         .anyExchange().authenticated()
