@@ -2,64 +2,52 @@ package org.wildcloud.wildcloud_backend.controller;
 
 
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.wildcloud.wildcloud_backend.dto.UserDTO;
-import org.wildcloud.wildcloud_backend.dto.UserLoginDTO;
-import org.wildcloud.wildcloud_backend.dto.UserLogoutDTO;
-import org.wildcloud.wildcloud_backend.dto.UserRequestDTO;
-import org.wildcloud.wildcloud_backend.entity.CameraInfo;
-import org.wildcloud.wildcloud_backend.service.Implementations.UserServiceIMPL;
+import org.wildcloud.wildcloud_backend.dto.*;
+import org.wildcloud.wildcloud_backend.security.JwtUtil;
+import org.wildcloud.wildcloud_backend.service.RefreshTokenService;
 import org.wildcloud.wildcloud_backend.service.UserService;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-
-//              !!!!!!!!!!!!!OBS!!!!!!!!!!!
-//KOM IHÅG ATT LÄGGA TILL NYA ENDPOINTS TILL SECURITYCONFIGURATION
-//SÅ ATT DE INTE KRÄVER AUTHENTICERING FÖR ATT TESTA!!!!!!!!
-//              !!!!!!!!!!!!!OBS!!!!!!!!!!!
 
 @RestController
-@CrossOrigin(origins = "http://localhost:8081")
 @RequestMapping("/api/users")
-@CrossOrigin(origins = "http://localhost:8080")
+@RequiredArgsConstructor
 public class UserController {
 
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
+    private final JwtUtil jwtUtil;
+    private final RefreshTokenService refreshTokenService;
 
     // User Endpoints
 
-    @PostMapping("/createUser")
-    public Mono<ResponseEntity<UserDTO>> registerUser(@Valid @RequestBody UserRequestDTO userRequestDTO) {
-        return userService.registerUser(userRequestDTO)
-                .map(ResponseEntity::ok)
-                .onErrorResume(e -> {
-                    System.err.println("Error registering user: " + e.getMessage());
-                    e.printStackTrace();
-                    return Mono.just(ResponseEntity.status(500).build());
-                })
-                .doOnSuccess(response -> System.out.println("User registered: " + userRequestDTO));
+    @PostMapping("/refreshToken")
+    public Mono<ResponseEntity<TokenRefreshResponseDTO>> refreshToken(@Valid @RequestBody TokenRefreshRequestDTO request) {
+        return refreshTokenService.findByToken(request.getRefreshToken())
+                .flatMap(refreshTokenService::verifyExpiration)
+                .flatMap(refreshToken -> userService.findById(refreshToken.getUserId())
+                        .map(user -> {
+                            String token = jwtUtil.generateToken(user.getEmail());
+                            return ResponseEntity.ok(TokenRefreshResponseDTO.builder()
+                                    .accessToken(token)
+                                    .refreshToken(refreshToken.getToken())
+                                    .tokenType("Bearer")
+                                    .build());
+                        }))
+                .switchIfEmpty(Mono.just(ResponseEntity.badRequest().build()));
     }
-
-    @PostMapping("/login")
-    public Mono<ResponseEntity<UserDTO>> loginUser(@Valid @RequestBody UserLoginDTO userLoginDTO) {
-        return userService.loginUser(userLoginDTO)
-                .doOnNext(user -> System.out.println("User logged in: " + userLoginDTO))
-                .map(ResponseEntity::ok);
-    }
-
-
 
     @PostMapping("/logout")
     public Mono<ResponseEntity<String>> logoutUser(@RequestBody Map<String, String> request) {
         String userEmail = request.get("userEmail");
-        return userService.logoutUser(userEmail)
+        return userService.findByUserEmail(userEmail)
+                .flatMap(user -> refreshTokenService.deleteByUserId(user.getId())
+                        .then(userService.logoutUser(userEmail)))
                 .thenReturn(ResponseEntity.ok("User logged out successfully"))
                 .onErrorResume(e -> {
                     System.err.println("Error logging out user: " + e.getMessage());
@@ -79,8 +67,6 @@ public class UserController {
         return userService.deleteUser(userId)
                 .thenReturn(ResponseEntity.ok(true))
                 .onErrorReturn(ResponseEntity.ok(false));
-
-
     }
 
     @PostMapping("/updateUser/{userId}")
@@ -90,6 +76,12 @@ public class UserController {
             .map(ResponseEntity::ok);
     }
 
+    @GetMapping("/getUserById/{userId}")
+    public Mono<ResponseEntity<UserDTO>> getUserById(@PathVariable("userId") Long userId) {
+        return userService.findById(userId)
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.notFound().build());
+    }
 
 
     // todo: log out endpoint(tamas)

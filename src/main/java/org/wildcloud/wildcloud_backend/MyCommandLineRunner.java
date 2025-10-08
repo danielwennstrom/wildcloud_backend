@@ -5,7 +5,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
-import org.wildcloud.wildcloud_backend.entity.UserInfo;
 import org.wildcloud.wildcloud_backend.repository.UserRepository;
 
 @Component
@@ -21,13 +20,5 @@ public class MyCommandLineRunner implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         logger.info("Starting application, and some tests...");
-
-
-
     }
-
-
-
-
-
 }

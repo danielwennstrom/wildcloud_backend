@@ -14,7 +14,5 @@ public class UserLogoutDTO {
     @NotBlank (message = "You are not logged in")
     private String email;
 
-
-
 }
 

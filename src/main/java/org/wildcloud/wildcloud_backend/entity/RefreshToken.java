@@ -1,32 +1,23 @@
 package org.wildcloud.wildcloud_backend.entity;
 
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
-import org.springframework.validation.annotation.Validated;
+
+import java.time.Instant;
 
 @Data
-@Table("camera_info")
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Validated
-public class CameraInfo {
-
+@Table("refresh_tokens")
+public class RefreshToken {
     @Id
-    @Column("camera_email")
-    private String cameraEmail;
-
-    @Column
-    private Long cameraId;
-
-    @Column
+    private Long id;
+    private String token;
     private Long userId;
-
-
+    private Instant expiryDate;
 }

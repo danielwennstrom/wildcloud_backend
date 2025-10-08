@@ -1,11 +1,10 @@
 package org.wildcloud.wildcloud_backend.service.Implementations;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.wildcloud.wildcloud_backend.dto.UserDTO;
 import org.wildcloud.wildcloud_backend.dto.UserLoginDTO;
-import org.wildcloud.wildcloud_backend.dto.UserLogoutDTO;
 import org.wildcloud.wildcloud_backend.dto.UserRequestDTO;
 import org.wildcloud.wildcloud_backend.entity.UserInfo;
 import org.wildcloud.wildcloud_backend.exception.custom.EmailTakenException;
@@ -16,25 +15,16 @@ import org.wildcloud.wildcloud_backend.service.UserService;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-
-
 @Service
+@RequiredArgsConstructor
 public class UserServiceIMPL implements UserService {
 
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    public UserServiceIMPL(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
 
     @Override
     public Flux<UserDTO> findAll() {
-
         return userRepository.findAll()
                 .map(this::buildUserDTO);
     }
@@ -135,6 +125,7 @@ public class UserServiceIMPL implements UserService {
                 })
                 .flatMap(userRepository::save)
                 .map(this::buildUserDTO);
+
     }
 
     @Override
