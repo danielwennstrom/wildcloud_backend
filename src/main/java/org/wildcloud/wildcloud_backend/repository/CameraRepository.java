@@ -4,18 +4,19 @@ package org.wildcloud.wildcloud_backend.repository;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import org.springframework.stereotype.Repository;
 import org.wildcloud.wildcloud_backend.entity.CameraInfo;
-import org.wildcloud.wildcloud_backend.entity.UserInfo;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Repository
-public interface UserRepository extends ReactiveCrudRepository<UserInfo, Long> {
+public interface CameraRepository extends ReactiveCrudRepository<CameraInfo, Long> {
 
-    Mono<UserInfo> findByUserEmail(String userEmail);
+    Mono<CameraInfo> findByCameraEmail(String cameraEmail);
 
-    Mono<Boolean> existsByUserEmail(String userEmail);
+    Mono<Boolean> existsByCameraEmail(String cameraEmail);
 
-    Mono<UserInfo> findByPhoneNumber(Long phoneNumber);
+
+
+    Mono<CameraInfo> findById(Long cameraId);
+
 
 }
-

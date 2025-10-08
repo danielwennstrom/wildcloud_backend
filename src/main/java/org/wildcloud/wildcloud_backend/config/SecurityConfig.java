@@ -27,11 +27,17 @@ public class SecurityConfig {
         return http
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .authorizeExchange(exchanges -> exchanges
-                        .pathMatchers("/api/users/createUser" , "/api/users/login", "/api/users/getAllUsers")  /// Ta bort getAllUsers senare efter testning.
-                                .permitAll()
+                        .pathMatchers(
+                                 "/api/users/**",
+                                 "/api/cameras/**",
+                                 "/api/relationships/**"
+                                 )
+                        // todo: Ta bort  senare efter testning.
+                        .permitAll()
                         .anyExchange().authenticated()
                 )
-                .httpBasic(httpBasic -> {})
+                .httpBasic(httpBasic -> {
+                })
                 .securityContextRepository(NoOpServerSecurityContextRepository.getInstance())
                 .addFilterAt(authLoggingFilter(), SecurityWebFiltersOrder.HTTP_BASIC)
                 .build();
@@ -60,5 +66,7 @@ public class SecurityConfig {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(12);
     }
+
+
 }
 

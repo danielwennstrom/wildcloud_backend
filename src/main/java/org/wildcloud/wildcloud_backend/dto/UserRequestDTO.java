@@ -12,7 +12,10 @@ public class UserRequestDTO {
 
     @NotBlank
     @Email(message = "Must be a valid email address")
-    private String email;
+    private String userEmail;
+
+    private Long userId;
+
 
     @NotBlank(message = "Password is required")
     @Size(min = 5, message = "Password must contain at least 5 characters.")
