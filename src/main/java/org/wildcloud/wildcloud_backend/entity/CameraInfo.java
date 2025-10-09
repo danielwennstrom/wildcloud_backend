@@ -28,7 +28,6 @@ public class CameraInfo {
     @Column("camera_email")
     private String cameraEmail;
 
-
     @Column
     private String cameraName;
 
