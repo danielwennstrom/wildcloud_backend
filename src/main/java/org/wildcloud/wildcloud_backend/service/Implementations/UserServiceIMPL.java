@@ -1,161 +1,151 @@
 package org.wildcloud.wildcloud_backend.service.Implementations;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.annotation.Id;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.wildcloud.wildcloud_backend.dto.CameraDTO;
 import org.wildcloud.wildcloud_backend.dto.UserDTO;
 import org.wildcloud.wildcloud_backend.dto.UserLoginDTO;
-import org.wildcloud.wildcloud_backend.dto.UserLogoutDTO;
 import org.wildcloud.wildcloud_backend.dto.UserRequestDTO;
+import org.wildcloud.wildcloud_backend.entity.CameraInfo;
+import org.wildcloud.wildcloud_backend.entity.RelationEntity.UserCamera;
 import org.wildcloud.wildcloud_backend.entity.UserInfo;
-import org.wildcloud.wildcloud_backend.exception.custom.EmailTakenException;
-import org.wildcloud.wildcloud_backend.exception.custom.InvalidCredentialsException;
 import org.wildcloud.wildcloud_backend.exception.custom.UserNotFoundException;
+import org.wildcloud.wildcloud_backend.exception.validator.CameraValidation;
+import org.wildcloud.wildcloud_backend.exception.validator.UserValidation;
+import org.wildcloud.wildcloud_backend.repository.RelationRepository.UserCameraRepository;
 import org.wildcloud.wildcloud_backend.repository.UserRepository;
+import org.wildcloud.wildcloud_backend.service.CameraService;
 import org.wildcloud.wildcloud_backend.service.UserService;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 
-
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class UserServiceIMPL implements UserService {
 
 
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    public UserServiceIMPL(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
+    private final UserRepository userRepository;
+    private final UserValidation userValidation;
+    private final PasswordEncoder passwordEncoder;
+    private final CameraService cameraService;
+    private final UserCameraRepository userCameraRepository;
+    private final CameraValidation cameraValidation;
 
     @Override
     public Flux<UserDTO> findAll() {
-
         return userRepository.findAll()
                 .map(this::buildUserDTO);
     }
 
     @Override
     public Mono<UserDTO> findById(Long userId) {
-        return userRepository.findById(userId)
-                .switchIfEmpty(Mono.error(new UserNotFoundException("User with id " + userId + " not found")))
+        return userValidation.userExistsByIdValidation(userId)
                 .map(this::buildUserDTO);
     }
 
     @Override
     public Mono<UserDTO> findByUserEmail(String email) {
-        return userRepository.findByUserEmail(email)
-                .switchIfEmpty(Mono.error(new UserNotFoundException("User with email " + email + " not found")))
+        return userValidation.userExistsByEmailValidation(email)
+                .map(this::buildUserDTO);
+    }
+
+    @Override
+    public Flux<UserDTO> findUsersByCameraId(Long cameraId) {
+        return userCameraRepository.findByCameraId(cameraId)
+                .flatMap(userCamera -> userRepository.findById(userCamera.getUserId()))
                 .map(this::buildUserDTO);
     }
 
     @Override
     public Mono<UserDTO> findByPhoneNumber(Long phoneNumber) {
-        return userRepository.findByPhoneNumber(phoneNumber)
-                .switchIfEmpty(Mono.error(new UserNotFoundException("User with phone number " + phoneNumber + " not found")))
+        return userValidation.userExistsByPhoneNumberValidation(phoneNumber)
                 .map(this::buildUserDTO);
     }
 
     @Override
     public Mono<UserDTO> registerUser(UserRequestDTO userRequestDTO) {
+        log.info("Service method registerUser called with email: {}", userRequestDTO.getUserEmail());
 
-        return userRepository.existsByUserEmail(userRequestDTO.getEmail())
-                .flatMap(exists -> {
-                    if (Boolean.TRUE.equals(exists)) {
-                        return Mono.error(new EmailTakenException("User with email " + userRequestDTO.getEmail() + " already exists"));
-                    }
+        return userValidation.passwordValidation(userRequestDTO.getPassword())
+                .then(userValidation.emailValidation(userRequestDTO.getUserEmail()))
+                .then(Mono.defer(() -> {
+                    log.info("Creating new user entity");
+
                     UserInfo newUser = UserInfo.builder()
-                            .userEmail(userRequestDTO.getEmail())
                             .password(passwordEncoder.encode(userRequestDTO.getPassword()))
+                            .userEmail(userRequestDTO.getUserEmail())
                             .firstName(userRequestDTO.getFirstName())
                             .lastName(userRequestDTO.getLastName())
                             .phoneNumber(userRequestDTO.getPhoneNumber())
                             .build();
-                    return userRepository.save(newUser)
-                            .map(this::buildUserDTO)
-                            .doOnError(e ->System.err.println("Error saving user: " + e.getMessage()));
-                });
 
+                    log.info("Attempting to save user to database");
+                    return userRepository.save(newUser);
+
+                }))
+                .map(this::buildUserDTO);
     }
 
     @Override
     public Mono<UserDTO> loginUser(UserLoginDTO userLoginDTO) {
+        log.info("Service method loginUser called with email: {}", userLoginDTO.getUserEmail());
 
-        return userRepository.findByUserEmail(userLoginDTO.getEmail())
-                .switchIfEmpty(Mono.error(new UserNotFoundException("User with email " + userLoginDTO.getEmail() + " not found")))
-                .flatMap(userInfo -> {
-                    if (!passwordEncoder.matches(userLoginDTO.getPassword(), userInfo.getPassword())) {
-                        return Mono.error(new InvalidCredentialsException("Invalid credentials"));
-                    }
-                    return Mono.just(buildUserDTO(userInfo));
-                });
+        return userValidation.userExistsByEmailValidation(userLoginDTO.getUserEmail())
+                .map(this::buildUserDTO);
     }
 
     @Override
     public Mono<Void> logoutUser(String userEmail) {
-        return userRepository.findByUserEmail(userEmail)
-                .switchIfEmpty(Mono.error(new UserNotFoundException("User with email " + userEmail + " not found")))
-                .flatMap(userInfo -> {
-                    System.out.println("User " + userEmail + " logged out successfully");
-                    return Mono.empty();
-                });
+        return userValidation.userExistsByEmailValidation(userEmail)
+                .then();
     }
 
+
     @Override
-    public Mono<UserDTO> updateUser(UserRequestDTO userRequestDTO, Long userId) {
+    public Mono<UserDTO> updateUser(UserRequestDTO userRequestDTO, String userEmail) {
 
 
-        return userRepository.findById(userId)
-                .switchIfEmpty(Mono.error(new UserNotFoundException("User with id " + userId + "not found")))
+        return userValidation.userExistsByEmailValidation(userEmail)
                 .flatMap(userInfo -> {
-                    if (!userRequestDTO.getEmail().equals(userInfo.getUserEmail())) {
-                        return userRepository.findByUserEmail(userRequestDTO.getEmail())
-                                .flatMap(exists -> {
-                                    if (Boolean.TRUE.equals(exists)) {
-                                        return Mono.error(new EmailTakenException("User with email " + userRequestDTO.getEmail() + " already exists"));
-                                    }
-                                    userInfo.setUserEmail(userRequestDTO.getEmail());
-                                    return Mono.just(userInfo);
-                                });
+                    if (!userEmail.equals(userRequestDTO.getUserEmail())) {
+                        return userRepository.findByUserEmail(userRequestDTO.getUserEmail())
+                                .flatMap(existsEmail -> Mono.error(
+                                        new IllegalArgumentException("Email " + userRequestDTO.getUserEmail() + " is already in use")
+                                ))
+                                .then(Mono.just(userInfo));
                     }
-                    return Mono.just(userInfo);
+                    return (Mono.just(userInfo));
                 })
-                .map(userInfo -> {
-                    if (!passwordEncoder.matches(userRequestDTO.getPassword(), userInfo.getPassword())) {
-                        userInfo.setPassword(passwordEncoder.encode(userRequestDTO.getPassword()));
-                    }
+                .flatMap(userInfo -> {
+                    userInfo.setUserEmail(userEmail);
                     userInfo.setFirstName(userRequestDTO.getFirstName());
                     userInfo.setLastName(userRequestDTO.getLastName());
                     userInfo.setPhoneNumber(userRequestDTO.getPhoneNumber());
-                    return userInfo;
-                })
-                .flatMap(userRepository::save)
-                .map(this::buildUserDTO);
+
+                    return userRepository.save(userInfo)
+                            .map(this::buildUserDTO);
+                });
     }
 
     @Override
     public Mono<Void> deleteUser(Long userId) {
         return userExistsCheck(userId)
                 .flatMap(userInfo ->
-                        userRepository.deleteById(userInfo.getId())
+                        userRepository.deleteById(userId)
                 );
     }
 
 
 
-
-    //------------------------ Camera related methods ------------------------
-    //------------------------ Camera related methods ------------------------
-    //------------------------ Camera related methods ------------------------
-
     private UserDTO buildUserDTO(UserInfo userInfo) {
         return UserDTO.builder()
-                .id(userInfo.getId())
-                .email(userInfo.getUserEmail())
+                .userId(userInfo.getId())
+                .userEmail(userInfo.getUserEmail())
                 .phoneNumber(userInfo.getPhoneNumber())
                 .firstName(userInfo.getFirstName())
                 .lastName(userInfo.getLastName())
@@ -171,4 +161,49 @@ public class UserServiceIMPL implements UserService {
         return userRepository.findByUserEmail(email)
                 .switchIfEmpty(Mono.error(new UserNotFoundException("User with email " + email + " not found")));
     }
+
+    //------------------------ Camera related methods ------------------------
+    //------------------------ Camera related methods ------------------------
+    //------------------------ Camera related methods ------------------------
+
+    @Override
+    public Mono<Void> assignCameraToUser(String cameraEmail, String userEmail) {
+        return userValidation.userExistsByEmailValidation(userEmail)
+                .zipWith(cameraValidation.cameraExistsByCameraEmailValidation(cameraEmail))
+                .flatMap(tuple -> {
+                    UserInfo userInfo = tuple.getT1();
+                    CameraInfo cameraInfo = tuple.getT2();
+                    return userCameraRepository.save(
+                            UserCamera.builder()
+                                    .userId(userInfo.getId())
+                                    .cameraId(cameraInfo.getId())
+                                    .build()
+                    );
+                })
+                .then();
+    }
+
+    @Override
+    public Flux<CameraDTO> getCamerasByUserId(Long userId) {
+        return userExistsCheck(userId)
+                .flatMapMany(user -> userCameraRepository.findByUserId(user.getId()))
+                .flatMap(userCamera -> cameraService.findById(userCamera.getCameraId()))
+                .map(this::buildCameraDTO);
+    }
+
+    @Override
+    public Mono<Void> unlinkCameraFromUser(String userEmail, Long cameraId) {
+        return userExistsCheck(userEmail)
+                .flatMap(user -> userCameraRepository.deleteByUserIdAndCameraId(user.getId(), cameraId));
+    }
+
+    private CameraDTO buildCameraDTO(CameraInfo cameraInfo) {
+        return CameraDTO.builder()
+                .cameraEmail(cameraInfo.getCameraEmail())
+                .cameraName(cameraInfo.getCameraName())
+                .cameraId(cameraInfo.getId())
+                .build();
+    }
 }
+
+

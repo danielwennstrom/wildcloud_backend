@@ -15,9 +15,4 @@ public class R2dbcConfig {
         initializer.setConnectionFactory(connectionFactory);
         return initializer;
     }
-
-
-
-
-
 }

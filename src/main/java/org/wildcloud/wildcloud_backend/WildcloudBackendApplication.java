@@ -8,7 +8,7 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 @ConfigurationPropertiesScan("org.wildcloud.wildcloud_backend.config")
 public class WildcloudBackendApplication {
 
-    public static void main(String[] args) {
+    static void main(String[] args) {
         SpringApplication.run(WildcloudBackendApplication.class, args);
     }
 
