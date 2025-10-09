@@ -29,23 +29,6 @@ public class UserController {
 
     // User Endpoints
 
-    @PostMapping("/createUser")
-    public Mono<ResponseEntity<UserDTO>> createUser(@RequestBody UserRequestDTO userRequestDTO) {
-        log.info("Controller received createUser request for: {}", userRequestDTO.getUserEmail());
-
-        return userService.registerUser(userRequestDTO)
-                .doOnSubscribe(s -> log.info("Starting user registration process"))
-                .map(userDTO -> {
-                    log.info("User creation successful: {}", userDTO.getUserEmail());
-                    return ResponseEntity.ok(userDTO);
-
-                })
-                .doOnError(error -> log.error("Controller error: {}", error.getMessage(), error))
-                .onErrorResume(error -> {
-                    return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                            .body(null));
-                });
-    }
 
     @PostMapping("/refreshToken")
     public Mono<ResponseEntity<TokenRefreshResponseDTO>> refreshToken(@Valid @RequestBody TokenRefreshRequestDTO request) {
