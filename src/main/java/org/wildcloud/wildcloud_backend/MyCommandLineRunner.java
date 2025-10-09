@@ -20,5 +20,9 @@ public class MyCommandLineRunner implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         logger.info("Starting application, and some tests...");
+
+
     }
+
+
 }

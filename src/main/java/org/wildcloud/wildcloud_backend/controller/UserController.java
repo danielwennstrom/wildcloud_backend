@@ -3,6 +3,9 @@ package org.wildcloud.wildcloud_backend.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.wildcloud.wildcloud_backend.dto.*;
@@ -14,6 +17,7 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
@@ -25,6 +29,24 @@ public class UserController {
     private final RefreshTokenService refreshTokenService;
 
     // User Endpoints
+
+    @PostMapping("/createUser")
+    public Mono<ResponseEntity<UserDTO>> createUser(@RequestBody UserRequestDTO userRequestDTO) {
+        log.info("Controller received createUser request for: {}", userRequestDTO.getUserEmail());
+
+        return userService.registerUser(userRequestDTO)
+                .doOnSubscribe(s -> log.info("Starting user registration process"))
+                .map(userDTO -> {
+                    log.info("User creation successful: {}", userDTO.getUserEmail());
+                    return ResponseEntity.ok(userDTO);
+
+                })
+                .doOnError(error -> log.error("Controller error: {}", error.getMessage(), error))
+                .onErrorResume(error -> {
+                    return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .body(null));
+                });
+    }
 
     @PostMapping("/refreshToken")
     public Mono<ResponseEntity<TokenRefreshResponseDTO>> refreshToken(@Valid @RequestBody TokenRefreshRequestDTO request) {
@@ -62,19 +84,21 @@ public class UserController {
                 .map(ResponseEntity::ok);
     }
 
-    @DeleteMapping("/deleteUser/{userId}")
-    public Mono<ResponseEntity<Boolean>> deleteUser(@PathVariable("userId") Long userId) {
-        return userService.deleteUser(userId)
+    @PutMapping("/updateUser/{userEmail}")
+    public Mono<ResponseEntity<UserDTO>> updateUser(@Valid @RequestBody UserRequestDTO userRequestDTO, @PathVariable String userEmail) {
+        return userService.updateUser(userRequestDTO, userEmail)
+                .doOnSuccess(updatedUser -> log.info("User updated successfully: {}", updatedUser.getUserEmail()))
+                .doOnError(error -> log.error("Error updating user: {}", error.getMessage()))
+                .map(ResponseEntity::ok);
+    }
+
+
+    @DeleteMapping("/deleteUser/{userEmail}")
+    public Mono<ResponseEntity<Boolean>> deleteUser(@PathVariable String userEmail) {
+        return userService.deleteUser(userEmail)
                 .thenReturn(ResponseEntity.ok(true))
-                .onErrorReturn(ResponseEntity.ok(false));
-    }
+                .onErrorReturn(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(false));
 
-    @PostMapping("/updateUser/{userId}")
-    public Mono<ResponseEntity<UserDTO>> updateUser(@Valid @RequestBody UserRequestDTO userRequestDTO, @PathVariable("userId") Long userId) {
-
-    return userService.updateUser(userRequestDTO, userId)
-            .map(ResponseEntity::ok);
-    }
 
     @GetMapping("/getUserById/{userId}")
     public Mono<ResponseEntity<UserDTO>> getUserById(@PathVariable("userId") Long userId) {

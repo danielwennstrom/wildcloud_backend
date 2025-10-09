@@ -11,8 +11,9 @@ import lombok.Data;
 public class UserLogoutDTO {
 
     @Email
-    @NotBlank (message = "You are not logged in")
-    private String email;
+    @NotBlank(message = "You are not logged in")
+    private String userEmail;
+
 
 }
 
