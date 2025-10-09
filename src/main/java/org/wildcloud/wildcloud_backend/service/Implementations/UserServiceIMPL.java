@@ -2,6 +2,7 @@ package org.wildcloud.wildcloud_backend.service.Implementations;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.annotation.Id;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.wildcloud.wildcloud_backend.dto.CameraDTO;
@@ -24,6 +25,7 @@ import reactor.core.publisher.Mono;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class UserServiceIMPL implements UserService {
 
 
@@ -34,20 +36,8 @@ public class UserServiceIMPL implements UserService {
     private final UserCameraRepository userCameraRepository;
     private final CameraValidation cameraValidation;
 
-    public UserServiceIMPL(UserRepository userRepository, UserValidation userValidation,
-                           PasswordEncoder passwordEncoder, CameraService cameraService,
-                           UserCameraRepository userCameraRepository, CameraValidation cameraValidation) {
-        this.userRepository = userRepository;
-        this.userValidation = userValidation;
-        this.passwordEncoder = passwordEncoder;
-        this.cameraService = cameraService;
-        this.userCameraRepository = userCameraRepository;
-        this.cameraValidation = cameraValidation;
-    }
-
     @Override
     public Flux<UserDTO> findAll() {
-
         return userRepository.findAll()
                 .map(this::buildUserDTO);
     }
@@ -143,9 +133,11 @@ public class UserServiceIMPL implements UserService {
     }
 
     @Override
-    public Mono<Void> deleteUser(String userEmail) {
-        return userValidation.userExistsByEmailValidation(userEmail)
-                .flatMap(userInfo -> userRepository.deleteById(userInfo.getId()));
+    public Mono<Void> deleteUser(Long userId) {
+        return userExistsCheck(userId)
+                .flatMap(userInfo ->
+                        userRepository.deleteById(userId)
+                );
     }
 
 
@@ -190,7 +182,6 @@ public class UserServiceIMPL implements UserService {
                 .then();
     }
 
-
     @Override
     public Flux<CameraDTO> getCamerasByUserId(Long userId) {
         return userExistsCheck(userId)
@@ -212,8 +203,6 @@ public class UserServiceIMPL implements UserService {
                 .cameraId(cameraInfo.getId())
                 .build();
     }
-
-
 }
 
 

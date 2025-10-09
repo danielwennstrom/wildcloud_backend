@@ -22,7 +22,6 @@ public interface UserService {
     Mono<UserDTO> findByPhoneNumber(Long phoneNumber);
 
     Mono<UserDTO> registerUser(UserRequestDTO userCompleteDTO);
-
     Mono<UserDTO> loginUser(UserLoginDTO userLoginDTO);
 
     Mono<UserDTO> updateUser(UserRequestDTO userCompleteDTO, String userEmail);

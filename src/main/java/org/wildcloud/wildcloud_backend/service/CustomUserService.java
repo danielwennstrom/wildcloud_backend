@@ -1,5 +1,7 @@
-package org.wildcloud.wildcloud_backend.service.Implementations;
+package org.wildcloud.wildcloud_backend.service;
 
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.userdetails.*;
 import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -8,14 +10,10 @@ import org.wildcloud.wildcloud_backend.repository.UserRepository;
 import reactor.core.publisher.Mono;
 
 @Service
-public class CustomUserServiceIMPL implements ReactiveUserDetailsService {
-
+@RequiredArgsConstructor
+public class CustomUserService implements ReactiveUserDetailsService {
 
     private final UserRepository userRepository;
-
-    public CustomUserServiceIMPL(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
 
     @Override
     public Mono<UserDetails> findByUsername(String username) {

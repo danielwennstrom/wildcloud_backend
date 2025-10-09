@@ -2,35 +2,31 @@ package org.wildcloud.wildcloud_backend.controller;
 
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.wildcloud.wildcloud_backend.dto.UserDTO;
-import org.wildcloud.wildcloud_backend.dto.UserLoginDTO;
-import org.wildcloud.wildcloud_backend.dto.UserRequestDTO;
+import org.wildcloud.wildcloud_backend.dto.*;
+import org.wildcloud.wildcloud_backend.security.JwtUtil;
+import org.wildcloud.wildcloud_backend.service.RefreshTokenService;
 import org.wildcloud.wildcloud_backend.service.UserService;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.Map;
 
-//              !!!!!!!!!!!!!OBS!!!!!!!!!!!
-//KOM IHÅG ATT LÄGGA TILL NYA ENDPOINTS TILL SECURITYCONFIGURATION
-//SÅ ATT DE INTE KRÄVER AUTHENTICERING FÖR ATT TESTA!!!!!!!!
-//              !!!!!!!!!!!!!OBS!!!!!!!!!!!
-
 @Slf4j
 @RestController
-@CrossOrigin(origins = "http://localhost:8081")
 @RequestMapping("/api/users")
-@CrossOrigin(origins = "http://localhost:8080")
+@RequiredArgsConstructor
 public class UserController {
 
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
+    private final JwtUtil jwtUtil;
+    private final RefreshTokenService refreshTokenService;
 
     // User Endpoints
 
@@ -52,18 +48,28 @@ public class UserController {
                 });
     }
 
-    @PostMapping("/login")
-    public Mono<ResponseEntity<UserDTO>> loginUser(@Valid @RequestBody UserLoginDTO userLoginDTO) {
-        return userService.loginUser(userLoginDTO)
-                .doOnNext(user -> System.out.println("User logged in: " + userLoginDTO))
-                .map(ResponseEntity::ok);
+    @PostMapping("/refreshToken")
+    public Mono<ResponseEntity<TokenRefreshResponseDTO>> refreshToken(@Valid @RequestBody TokenRefreshRequestDTO request) {
+        return refreshTokenService.findByToken(request.getRefreshToken())
+                .flatMap(refreshTokenService::verifyExpiration)
+                .flatMap(refreshToken -> userService.findById(refreshToken.getUserId())
+                        .map(user -> {
+                            String token = jwtUtil.generateToken(user.getEmail());
+                            return ResponseEntity.ok(TokenRefreshResponseDTO.builder()
+                                    .accessToken(token)
+                                    .refreshToken(refreshToken.getToken())
+                                    .tokenType("Bearer")
+                                    .build());
+                        }))
+                .switchIfEmpty(Mono.just(ResponseEntity.badRequest().build()));
     }
-
 
     @PostMapping("/logout")
     public Mono<ResponseEntity<String>> logoutUser(@RequestBody Map<String, String> request) {
         String userEmail = request.get("userEmail");
-        return userService.logoutUser(userEmail)
+        return userService.findByUserEmail(userEmail)
+                .flatMap(user -> refreshTokenService.deleteByUserId(user.getId())
+                        .then(userService.logoutUser(userEmail)))
                 .thenReturn(ResponseEntity.ok("User logged out successfully"))
                 .onErrorResume(e -> {
                     System.err.println("Error logging out user: " + e.getMessage());
@@ -94,12 +100,17 @@ public class UserController {
                 .onErrorReturn(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(false));
 
 
+    @GetMapping("/getUserById/{userId}")
+    public Mono<ResponseEntity<UserDTO>> getUserById(@PathVariable("userId") Long userId) {
+        return userService.findById(userId)
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
 
-    // todo: fix error 401 on update user endpoint(tamas)
-    // todo: fix, error 500 log out endpoint(tamas)
+    // todo: log out endpoint(tamas)
     //todo: create new authcontroller(boti)
+    //todo: create camera thingies(tamas)
 
     // Camera Endpoints
 
