@@ -10,7 +10,6 @@ import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3AsyncClient;
-import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3Configuration;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 
@@ -33,26 +32,6 @@ public class R2Config {
         );
 
         return S3AsyncClient.builder()
-                .endpointOverride(URI.create(r2Properties.getEndpoint()))
-                .credentialsProvider(StaticCredentialsProvider.create(
-                        credentials))
-                .region(Region.US_EAST_1)
-                .serviceConfiguration(S3Configuration.builder()
-                        .checksumValidationEnabled(false).build())
-                .forcePathStyle(true)
-                .build();
-    }
-
-    // use for simple operations like DELETE
-    @Bean
-    public S3Client r2Client() {
-        log.info("R2 Client created for account: {}", r2Properties.getAccountId());
-
-        AwsBasicCredentials credentials = AwsBasicCredentials.create(
-                r2Properties.getAccessKey(), r2Properties.getSecretKey()
-        );
-
-        return S3Client.builder()
                 .endpointOverride(URI.create(r2Properties.getEndpoint()))
                 .credentialsProvider(StaticCredentialsProvider.create(
                         credentials))

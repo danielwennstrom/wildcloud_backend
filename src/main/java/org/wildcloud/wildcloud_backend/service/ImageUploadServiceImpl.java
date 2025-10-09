@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.wildcloud.wildcloud_backend.config.UploadConfig;
+import org.wildcloud.wildcloud_backend.dto.UploadResultDto;
+import org.wildcloud.wildcloud_backend.dto.UploadSummaryDto;
 import org.wildcloud.wildcloud_backend.entity.Image;
 import org.wildcloud.wildcloud_backend.enums.SourceType;
 import org.wildcloud.wildcloud_backend.exception.custom.ProcessException;
@@ -11,8 +13,6 @@ import org.wildcloud.wildcloud_backend.exception.custom.UploadException;
 import org.wildcloud.wildcloud_backend.mapper.ImageMapper;
 import org.wildcloud.wildcloud_backend.model.ImageUploadContext;
 import org.wildcloud.wildcloud_backend.model.ImageUploadData;
-import org.wildcloud.wildcloud_backend.model.UploadResult;
-import org.wildcloud.wildcloud_backend.model.UploadSummary;
 import org.wildcloud.wildcloud_backend.processor.ImageProcessor;
 import org.wildcloud.wildcloud_backend.registrar.ProcessorRegistrar;
 import org.wildcloud.wildcloud_backend.service.storage.StorageService;
@@ -37,7 +37,7 @@ public class ImageUploadServiceImpl implements ImageUploadService {
     // TODO: implementera events, kan användas till notifications etc.
     //    private final ApplicationEventPublisher eventPublisher;
 
-    public Mono<UploadSummary> processUpload(SourceType sourceType, ImageUploadContext context) {
+    public Mono<UploadSummaryDto> processUpload(SourceType sourceType, ImageUploadContext context) {
         log.info("processUpload started for sourceType: {}", sourceType);
         ImageProcessor processor = processorRegistrar.getProcessor(sourceType);
 
@@ -50,22 +50,22 @@ public class ImageUploadServiceImpl implements ImageUploadService {
                         Flux.fromIterable(imageUploadDataList)
                                 .flatMap(imageUploadData -> validate(imageUploadData)
                                         .flatMap(this::uploadSingleImage)
-                                        .map(uploadedImage -> UploadResult.success(uploadedImage.getFileMetadata().getFileName()))
+                                        .map(uploadedImage -> UploadResultDto.success(uploadedImage.getFileMetadata().getFileName()))
                                         .doOnError(e -> log.error("Error processing file: {}",
                                                 imageUploadData.getFileMetadata().getOriginalFileName(), e))
                                         .onErrorResume(e -> Mono.just(
-                                                UploadResult.failure(
+                                                UploadResultDto.failure(
                                                         imageUploadData.getFileMetadata().getOriginalFileName(),
                                                         e.getMessage()
                                                 )
-                                        )), uploadConfig.getUploadConcurrencyLimit() // concurrency
+                                        )), uploadConfig.getConcurrencyLimit() // concurrency
                                 ))
                 .collectList()
                 .map(results -> {
-                    Map<Boolean, List<UploadResult>> partitioned = results.stream()
-                            .collect(Collectors.partitioningBy(UploadResult::isSuccess));
+                    Map<Boolean, List<UploadResultDto>> partitioned = results.stream()
+                            .collect(Collectors.partitioningBy(UploadResultDto::isSuccess));
 
-                    return UploadSummary.builder()
+                    return UploadSummaryDto.builder()
                             .successes(partitioned.get(true))
                             .failures(partitioned.get(false))
                             .build();

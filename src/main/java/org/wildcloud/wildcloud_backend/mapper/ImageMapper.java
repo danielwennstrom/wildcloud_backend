@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import org.wildcloud.wildcloud_backend.config.UploadConfig;
+import org.wildcloud.wildcloud_backend.config.ImageRetrievalConfig;
 import org.wildcloud.wildcloud_backend.dto.FileMetadataDto;
 import org.wildcloud.wildcloud_backend.dto.ImageMetadataDto;
 import org.wildcloud.wildcloud_backend.dto.ImageResponseDto;
@@ -25,7 +25,7 @@ import java.util.Objects;
 @Slf4j
 public class ImageMapper {
     private final StorageService storageService;
-    private final UploadConfig uploadConfig;
+    private final ImageRetrievalConfig imageRetrievalConfig;
     private final ObjectMapper objectMapper;
 
     public Mono<ImageResponseDto> mapToDto(Image image,
@@ -48,7 +48,7 @@ public class ImageMapper {
                         image,
                         imageMetaMap.get(image.getId()),
                         fileMetaMap.get(image.getId())
-                ), uploadConfig.getRetrievalConcurrencyLimit());
+                ), imageRetrievalConfig.getConcurrencyLimit());
     }
 
     public String buildStorageKey(ImageUploadData imageData) {

@@ -11,8 +11,8 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-    @ExceptionHandler(ProcessException.class)
-    public ResponseEntity<Map<String, Object>> handleUploadProcessingFailed(ProcessException ex) {
+    @ExceptionHandler(UploadException.class)
+    public ResponseEntity<Map<String, Object>> handleUploadFailed(UploadException ex) {
         return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
     }
 

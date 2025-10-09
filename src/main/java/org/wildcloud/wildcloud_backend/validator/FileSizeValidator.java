@@ -1,5 +1,6 @@
 package org.wildcloud.wildcloud_backend.validator;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.wildcloud.wildcloud_backend.config.UploadConfig;
@@ -8,12 +9,9 @@ import org.wildcloud.wildcloud_backend.model.ImageUploadData;
 
 @Component
 @Order(1)
+@RequiredArgsConstructor
 public class FileSizeValidator implements ImageValidator {
     private final UploadConfig uploadConfig;
-
-    public FileSizeValidator(UploadConfig uploadConfig) {
-        this.uploadConfig = uploadConfig;
-    }
 
     @Override
     public void validate(ImageUploadData imageUploadData) throws ValidationException {
