@@ -144,6 +144,7 @@ public class UserServiceIMPL implements UserService {
 
     private UserDTO buildUserDTO(UserInfo userInfo) {
         return UserDTO.builder()
+                .userId(userInfo.getId())
                 .userEmail(userInfo.getUserEmail())
                 .phoneNumber(userInfo.getPhoneNumber())
                 .firstName(userInfo.getFirstName())

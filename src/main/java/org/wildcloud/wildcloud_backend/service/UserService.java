@@ -26,7 +26,7 @@ public interface UserService {
 
     Mono<UserDTO> updateUser(UserRequestDTO userCompleteDTO, String userEmail);
 
-    Mono<Void> deleteUser(String userEmail);
+    Mono<Void> deleteUser(Long userId);
 
     Mono<Void> logoutUser(String userEmail);
 

@@ -4,7 +4,6 @@ package org.wildcloud.wildcloud_backend.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -54,7 +53,7 @@ public class UserController {
                 .flatMap(refreshTokenService::verifyExpiration)
                 .flatMap(refreshToken -> userService.findById(refreshToken.getUserId())
                         .map(user -> {
-                            String token = jwtUtil.generateToken(user.getEmail());
+                            String token = jwtUtil.generateToken(user.getUserEmail());
                             return ResponseEntity.ok(TokenRefreshResponseDTO.builder()
                                     .accessToken(token)
                                     .refreshToken(refreshToken.getToken())
@@ -68,7 +67,7 @@ public class UserController {
     public Mono<ResponseEntity<String>> logoutUser(@RequestBody Map<String, String> request) {
         String userEmail = request.get("userEmail");
         return userService.findByUserEmail(userEmail)
-                .flatMap(user -> refreshTokenService.deleteByUserId(user.getId())
+                .flatMap(user -> refreshTokenService.deleteByUserId(user.getUserId())
                         .then(userService.logoutUser(userEmail)))
                 .thenReturn(ResponseEntity.ok("User logged out successfully"))
                 .onErrorResume(e -> {
@@ -93,11 +92,12 @@ public class UserController {
     }
 
 
-    @DeleteMapping("/deleteUser/{userEmail}")
-    public Mono<ResponseEntity<Boolean>> deleteUser(@PathVariable String userEmail) {
-        return userService.deleteUser(userEmail)
+    @DeleteMapping("/deleteUser/{userId}")
+    public Mono<ResponseEntity<Boolean>> deleteUser(@PathVariable Long userId) {
+        return userService.deleteUser(userId)
                 .thenReturn(ResponseEntity.ok(true))
                 .onErrorReturn(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(false));
+    }
 
 
     @GetMapping("/getUserById/{userId}")

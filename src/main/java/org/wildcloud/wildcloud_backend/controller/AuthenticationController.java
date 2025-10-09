@@ -39,17 +39,17 @@ public class AuthenticationController {
 
     @PostMapping("/login")
     public Mono<ResponseEntity<Map<String, Object>>> loginUser(@Valid @RequestBody UserLoginDTO userLoginDTO) {
-        System.out.println("Received login request for user: " + userLoginDTO.getEmail());
+        System.out.println("Received login request for user: " + userLoginDTO.getUserEmail());
         return userService.loginUser(userLoginDTO)
-                .flatMap(userDTO -> refreshTokenService.createRefreshToken(userDTO.getId())
+                .flatMap(userDTO -> refreshTokenService.createRefreshToken(userDTO.getUserId())
                         .map(refreshToken -> {
-                            String accessToken = jwtUtil.generateToken(userDTO.getEmail());
+                            String accessToken = jwtUtil.generateToken(userDTO.getUserEmail());
                             return ResponseEntity.ok(Map.of(
                                     "user", userDTO,
                                     "accessToken", accessToken,
                                     "refreshToken", refreshToken.getToken(),
                                     "tokenType", "Bearer",
-                                    "id", userDTO.getId()
+                                    "id", userDTO.getUserId()
                             ));
                         }));
     }
