@@ -1,8 +1,4 @@
 -- Additional constraints
-ALTER TABLE images
-    ADD CONSTRAINT chk_user_id_not_empty
-        CHECK (length(trim(user_id)) > 0);
-
 -- ALTER TABLE images
 --     ADD CONSTRAINT chk_source_type_valid
 --         CHECK (source_type IN ('UPLOAD', 'CAMERA', 'API', 'BATCH'));

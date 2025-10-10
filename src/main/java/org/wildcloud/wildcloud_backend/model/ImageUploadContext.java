@@ -9,7 +9,6 @@ import java.util.List;
 @Data
 @Builder
 public class ImageUploadContext {
-    private String userId;
     private String cameraId;
     private List<FileAdapter> files;
 }

@@ -32,7 +32,7 @@ public class ImageServiceImpl implements ImageService {
 
     // TODO: userId kanske ska användas till access control eller liknande?
     @Override
-    public Flux<ImageResponseDto> retrieve(String userId, String cameraId, Pageable pageable) {
+    public Flux<ImageResponseDto> retrieve(String cameraId, Pageable pageable) {
         return imageRepository.getAllByCameraId(cameraId, pageable)
                 .collectList()
                 .flatMapMany(images -> {
@@ -62,7 +62,7 @@ public class ImageServiceImpl implements ImageService {
     }
 
     @Override
-    public Mono<Void> delete(String userId, Long imageId) {
+    public Mono<Void> delete(Long imageId) {
         return imageRepository.findById(imageId)
                 .switchIfEmpty(Mono.error(new RuntimeException("Image not found: " + imageId)))
                 .flatMap(image ->

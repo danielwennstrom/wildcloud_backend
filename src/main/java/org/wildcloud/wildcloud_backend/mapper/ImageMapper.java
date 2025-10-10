@@ -52,8 +52,7 @@ public class ImageMapper {
     }
 
     public String buildStorageKey(ImageUploadData imageData) {
-        return String.format("images/%s/%s/%s",
-                Objects.toString(imageData.getUserId(), "null"),
+        return String.format("images/%s/%s",
                 Objects.toString(imageData.getCameraId(), "null"),
                 imageData.getFileMetadata().getFileName()
         );
@@ -71,7 +70,6 @@ public class ImageMapper {
         }
 
         return Image.builder()
-                .userId(data.getUserId())
                 .cameraId(data.getCameraId())
                 .sourceType(data.getSourceType())
                 .sourceMetadata(sourceMetadataJson)

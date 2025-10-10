@@ -36,7 +36,6 @@ public class DirectUploadProcessor implements ImageProcessor {
 
                 // todo: ha med ett uploadedVia-fält i context DTO:n för webb/app?
                 ImageUploadData imageData = ImageUploadData.builder()
-                        .userId(context.getUserId())
                         .cameraId(context.getCameraId())
                         .sourceType(this.getSourceType().name().toLowerCase())
                         .buffer(file.getBytes())

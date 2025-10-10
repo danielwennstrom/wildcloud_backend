@@ -45,7 +45,6 @@ public class UploadController {
                 .collectList()
                 .map(adapters -> ImageUploadContext.builder()
                         .files(adapters)
-                        .userId(request.getUserId())
                         .cameraId(request.getCameraId())
                         .build())
                 .flatMap(context -> uploadService.processUpload(SourceType.DIRECT, context))

@@ -18,8 +18,6 @@ import org.springframework.data.relational.core.mapping.Table;
 public class Image {
     @Id
     private Long id;
-    @Column("user_id")
-    private String userId;
     @Column("camera_id")
     private String cameraId;
     @Column("source_type")

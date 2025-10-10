@@ -16,7 +16,6 @@ import java.util.Map;
 @Data
 @Builder
 public class ImageUploadData {
-    private String userId;
     private String cameraId;
     private String sourceType;
     private byte[] buffer;
