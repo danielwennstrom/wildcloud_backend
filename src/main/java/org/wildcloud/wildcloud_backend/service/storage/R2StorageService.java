@@ -8,7 +8,6 @@ import org.wildcloud.wildcloud_backend.config.R2Properties;
 import reactor.core.publisher.Mono;
 import software.amazon.awssdk.core.async.AsyncRequestBody;
 import software.amazon.awssdk.services.s3.S3AsyncClient;
-import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
@@ -24,7 +23,6 @@ import java.time.Duration;
 @Slf4j
 public class R2StorageService implements StorageService {
     private final S3AsyncClient r2AsyncClient;
-    private final S3Client r2Client;
     private final S3Presigner r2Presigner;
     private final R2Properties r2Properties;
 

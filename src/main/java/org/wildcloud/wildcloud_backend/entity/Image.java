@@ -19,7 +19,7 @@ public class Image {
     @Id
     private Long id;
     @Column("camera_id")
-    private String cameraId;
+    private Long cameraId;
     @Column("source_type")
     private String sourceType;
     @JsonManagedReference

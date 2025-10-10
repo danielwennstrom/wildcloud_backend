@@ -23,7 +23,7 @@ public class ImageController {
     private final ImageService imageService;
 
     @GetMapping("/{cameraId}")
-    public Flux<ImageResponseDto> getAll(@PathVariable String cameraId,
+    public Flux<ImageResponseDto> getAll(@PathVariable Long cameraId,
                                          @RequestParam(defaultValue = "0") int page,
                                          @RequestParam(defaultValue = "20")
                                          int size) {

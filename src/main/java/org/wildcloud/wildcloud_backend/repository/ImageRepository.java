@@ -6,5 +6,5 @@ import org.wildcloud.wildcloud_backend.entity.Image;
 import reactor.core.publisher.Flux;
 
 public interface ImageRepository extends ReactiveCrudRepository<Image, Long> {
-    Flux<Image> getAllByCameraId(String cameraId, Pageable pageable);
+    Flux<Image> getAllByCameraId(Long cameraId, Pageable pageable);
 }

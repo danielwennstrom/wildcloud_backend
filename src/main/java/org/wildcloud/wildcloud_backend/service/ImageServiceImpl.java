@@ -32,7 +32,7 @@ public class ImageServiceImpl implements ImageService {
 
     // TODO: userId kanske ska användas till access control eller liknande?
     @Override
-    public Flux<ImageResponseDto> retrieve(String cameraId, Pageable pageable) {
+    public Flux<ImageResponseDto> retrieve(Long cameraId, Pageable pageable) {
         return imageRepository.getAllByCameraId(cameraId, pageable)
                 .collectList()
                 .flatMapMany(images -> {

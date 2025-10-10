@@ -7,7 +7,7 @@ import reactor.core.publisher.Mono;
 
 
 public interface ImageService {
-    Flux<ImageResponseDto> retrieve(String cameraId, Pageable pageable);
+    Flux<ImageResponseDto> retrieve(Long cameraId, Pageable pageable);
 
     Mono<Void> delete(Long imageId);
 }

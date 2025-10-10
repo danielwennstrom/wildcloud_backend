@@ -4,6 +4,5 @@ import lombok.Getter;
 
 @Getter
 public class UploadRequestDto {
-    private String userId;
-    private String cameraId;
+    private Long cameraId;
 }
