@@ -29,6 +29,10 @@ public class SecurityConfig {
         return http
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .authorizeExchange(exchanges -> exchanges
+                        .pathMatchers("/api/users/createUser" , "/api/users/login", "/api/users/getAllUsers")  /// Ta bort getAllUsers senare efter testning.
+                                .permitAll()
+                        .pathMatchers("/api/upload/**").permitAll()
+                        .pathMatchers("/api/images/**").permitAll()
                         .pathMatchers("/api/**").permitAll()
                         .anyExchange().authenticated()
                 )
