@@ -5,6 +5,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextImpl;
 import org.springframework.security.web.server.context.ServerSecurityContextRepository;
@@ -54,11 +55,11 @@ public class AuthenticationFilter implements ServerSecurityContextRepository, We
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
         return load(exchange)
-                .map(securityContext -> {
-                    exchange.getAttributes().put("securityContext", securityContext);
-                    return exchange;
-                })
-                .defaultIfEmpty(exchange)
-                .flatMap(chain::filter);
+                .flatMap(securityContext ->
+                        chain.filter(exchange)
+                                .contextWrite(ReactiveSecurityContextHolder.withSecurityContext(Mono.just(securityContext)))
+                        )
+
+                .switchIfEmpty(chain.filter(exchange));
     }
 }

@@ -13,8 +13,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.security.web.server.context.NoOpServerSecurityContextRepository;
+import org.springframework.web.cors.CorsConfiguration;
 import org.wildcloud.wildcloud_backend.security.AuthenticationFilter;
 import org.springframework.web.server.WebFilter;
+
+import java.util.List;
 
 @Slf4j
 @Configuration
@@ -28,14 +31,20 @@ public class SecurityConfig {
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
         return http
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
-                .authorizeExchange(exchanges -> exchanges
-                        .pathMatchers("/api/**").permitAll()
-                        .anyExchange().authenticated()
-                )
-                .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
-                .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
+                .cors(cors -> cors.configurationSource(exchange -> {
+                    CorsConfiguration config = new CorsConfiguration();
+                    config.setAllowedOrigins(List.of("http://localhost:8081"));
+                    config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
+                    config.setAllowedHeaders(List.of("*"));
+                    config.setAllowCredentials(true);
+                    return config;
+                }))
                 .securityContextRepository(NoOpServerSecurityContextRepository.getInstance())
                 .addFilterAt(authenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION)
+                .authorizeExchange(exchanges -> exchanges
+                        .pathMatchers("/api/AuthenticateUsers/**").permitAll()
+                        .anyExchange().authenticated()
+                )
                 .build();
     }
 

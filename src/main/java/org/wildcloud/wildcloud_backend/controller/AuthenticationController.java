@@ -49,7 +49,7 @@ public class AuthenticationController {
                                     "accessToken", accessToken,
                                     "refreshToken", refreshToken.getToken(),
                                     "tokenType", "Bearer",
-                                    "id", userDTO.getUserId()
+                                    "userId", userDTO.getUserId()
                             ));
                         }));
     }
