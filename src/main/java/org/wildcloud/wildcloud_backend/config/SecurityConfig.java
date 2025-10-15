@@ -1,20 +1,18 @@
 package org.wildcloud.wildcloud_backend.config;
 
-import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
-import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
-import org.springframework.security.web.server.context.NoOpServerSecurityContextRepository;
+import org.springframework.web.cors.CorsConfiguration;
 import org.wildcloud.wildcloud_backend.security.AuthenticationFilter;
-import org.springframework.web.server.WebFilter;
+
+import java.util.List;
 
 @Slf4j
 @Configuration
@@ -28,18 +26,22 @@ public class SecurityConfig {
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
         return http
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
+                .cors(cors -> cors.configurationSource(exchange -> {
+                    CorsConfiguration config = new CorsConfiguration();
+                    config.setAllowedOrigins(List.of("http://localhost:8081"));
+                    config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
+                    config.setAllowedHeaders(List.of("*"));
+                    config.setAllowCredentials(true);
+                    return config;
+                }))
+
+                //.securityContextRepository(NoOpServerSecurityContextRepository.getInstance())
+                .securityContextRepository(authenticationFilter)
+                //.addFilterAt(authenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION)
                 .authorizeExchange(exchanges -> exchanges
-                        .pathMatchers("/api/users/createUser" , "/api/users/login", "/api/users/getAllUsers")  /// Ta bort getAllUsers senare efter testning.
-                                .permitAll()
-                        .pathMatchers("/api/upload/**").permitAll()
-                        .pathMatchers("/api/images/**").permitAll()
-                        .pathMatchers("/api/**").permitAll()
+                        .pathMatchers("/api/AuthenticateUsers/**").permitAll()
                         .anyExchange().authenticated()
                 )
-                .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
-                .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
-                .securityContextRepository(NoOpServerSecurityContextRepository.getInstance())
-                .addFilterAt(authenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION)
                 .build();
     }
 
