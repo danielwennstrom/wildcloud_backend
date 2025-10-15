@@ -5,19 +5,16 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextImpl;
 import org.springframework.security.web.server.context.ServerSecurityContextRepository;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
-import org.springframework.web.server.WebFilter;
-import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
 @Component
 @RequiredArgsConstructor
-public class AuthenticationFilter implements ServerSecurityContextRepository, WebFilter {
+public class AuthenticationFilter implements ServerSecurityContextRepository {
 
     private final JwtUtil jwtUtil;
 
@@ -32,11 +29,11 @@ public class AuthenticationFilter implements ServerSecurityContextRepository, We
         String path = request.getPath().value();
 
         // Skip authentication for specific endpoints
-        if (path.contains("/login") || path.contains("/refreshToken") || path.contains("/createUser")) {
+        if (path.contains("/api/AuthenticateUsers/login") || path.contains("/api/AuthenticateUsers/refreshToken") || path.contains("/api/AuthenticateUsers/createUser")) {
             return Mono.empty();
         }
-
         String authHeader = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
+        System.out.println("Auth Header: " + authHeader);
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
@@ -52,14 +49,14 @@ public class AuthenticationFilter implements ServerSecurityContextRepository, We
         return Mono.empty();
     }
 
-    @Override
-    public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
-        return load(exchange)
-                .flatMap(securityContext ->
-                        chain.filter(exchange)
-                                .contextWrite(ReactiveSecurityContextHolder.withSecurityContext(Mono.just(securityContext)))
-                        )
-
-                .switchIfEmpty(chain.filter(exchange));
-    }
+//    @Override
+//    public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
+//        return load(exchange)
+//                .flatMap(securityContext ->
+//                        chain.filter(exchange)
+//                                .contextWrite(ReactiveSecurityContextHolder.withSecurityContext(Mono.just(securityContext)))
+//                        )
+//
+//                .switchIfEmpty(chain.filter(exchange));
+//    }
 }

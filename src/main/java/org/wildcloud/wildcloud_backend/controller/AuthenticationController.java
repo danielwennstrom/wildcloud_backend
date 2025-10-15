@@ -4,7 +4,10 @@ package org.wildcloud.wildcloud_backend.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import org.wildcloud.wildcloud_backend.dto.UserDTO;
 import org.wildcloud.wildcloud_backend.dto.UserLoginDTO;
 import org.wildcloud.wildcloud_backend.dto.UserRequestDTO;
@@ -23,6 +26,7 @@ public class AuthenticationController {
     private final UserService userService;
     private final JwtUtil jwtUtil;
     private final RefreshTokenService refreshTokenService;
+//    private final AuthenticationManager authenticationManager;
 
     @PostMapping("/createUser")
     public Mono<ResponseEntity<UserDTO>> registerUser(@Valid @RequestBody UserRequestDTO userRequestDTO) {
@@ -40,6 +44,9 @@ public class AuthenticationController {
     @PostMapping("/login")
     public Mono<ResponseEntity<Map<String, Object>>> loginUser(@Valid @RequestBody UserLoginDTO userLoginDTO) {
         System.out.println("Received login request for user: " + userLoginDTO.getUserEmail());
+//        Authentication authentication = authenticationManager.authenticate(
+//                new UsernamePasswordAuthenticationToken(userLoginDTO.getUserEmail(), userLoginDTO.getPassword())
+        //);
         return userService.loginUser(userLoginDTO)
                 .flatMap(userDTO -> refreshTokenService.createRefreshToken(userDTO.getUserId())
                         .map(refreshToken -> {
