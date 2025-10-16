@@ -2,7 +2,7 @@ package org.wildcloud.wildcloud_backend.processor;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.wildcloud.wildcloud_backend.domain.FileAdapter;
 import org.wildcloud.wildcloud_backend.entity.FileMetadata;
 import org.wildcloud.wildcloud_backend.entity.ImageMetadata;
@@ -16,10 +16,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-@Component
+@Service
 @RequiredArgsConstructor
 @Slf4j
-public class DirectUploadProcessor implements ImageProcessor {
+public class EmailUploadProcessor implements ImageProcessor {
     private final MetadataService metadataService;
 
     @Override
@@ -34,6 +34,7 @@ public class DirectUploadProcessor implements ImageProcessor {
                 FileMetadata fileMetadata = metadataService.extractFileMetadata(file);
                 ImageMetadata imageMetadata = metadataService.extractImageMetadata(file);
 
+                // todo: ha med ett uploadedVia-fält i context DTO:n för webb/app?
                 ImageUploadData imageData = ImageUploadData.builder()
                         .cameraId(context.getCameraId())
                         .sourceType(this.getSourceType().name().toLowerCase())
@@ -52,12 +53,12 @@ public class DirectUploadProcessor implements ImageProcessor {
 
             return result;
         } catch (Exception e) {
-            throw new ProcessException("Failed to process direct upload", e);
+            throw new ProcessException("Failed to process email upload", e);
         }
     }
 
     @Override
     public SourceType getSourceType() {
-        return SourceType.DIRECT;
+        return SourceType.EMAIL;
     }
 }

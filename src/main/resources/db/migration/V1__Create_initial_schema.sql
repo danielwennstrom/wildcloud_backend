@@ -2,7 +2,7 @@
 CREATE TABLE images
 (
     id              BIGSERIAL PRIMARY KEY,
-    camera_id       VARCHAR(255),
+    camera_id BIGINT NOT NULL,
     source_type     VARCHAR(100) NOT NULL,
     source_metadata TEXT,
     storage_key     VARCHAR(500) NOT NULL UNIQUE,

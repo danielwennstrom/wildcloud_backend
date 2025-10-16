@@ -1,8 +1,7 @@
 package org.wildcloud.wildcloud_backend.service.Implementations;
 
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.annotation.Id;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.wildcloud.wildcloud_backend.dto.CameraDTO;
@@ -96,6 +95,7 @@ public class UserServiceIMPL implements UserService {
         log.info("Service method loginUser called with email: {}", userLoginDTO.getUserEmail());
 
         return userValidation.userExistsByEmailValidation(userLoginDTO.getUserEmail())
+                .flatMap(u -> userValidation.credentialsValidation(u, userLoginDTO.getPassword()))
                 .map(this::buildUserDTO);
     }
 
@@ -168,11 +168,13 @@ public class UserServiceIMPL implements UserService {
 
     @Override
     public Mono<Void> assignCameraToUser(String cameraEmail, String userEmail) {
+
         return userValidation.userExistsByEmailValidation(userEmail)
                 .zipWith(cameraValidation.cameraExistsByCameraEmailValidation(cameraEmail))
                 .flatMap(tuple -> {
                     UserInfo userInfo = tuple.getT1();
                     CameraInfo cameraInfo = tuple.getT2();
+                    log.info("Assigning camera {} to user {}", cameraInfo.getId(), userInfo.getUserEmail());
                     return userCameraRepository.save(
                             UserCamera.builder()
                                     .userId(userInfo.getId())
