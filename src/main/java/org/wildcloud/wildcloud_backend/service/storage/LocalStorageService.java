@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
+import org.wildcloud.wildcloud_backend.config.ImageRetrievalConfig;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
@@ -17,6 +18,8 @@ import java.nio.file.Paths;
 @RequiredArgsConstructor
 @Slf4j
 public class LocalStorageService implements StorageService {
+    private final ImageRetrievalConfig imageRetrievalConfig;
+    
     @Override
     public Mono<Void> uploadImage(String key, byte[] imageData, String contentType) {
         return Mono.fromCallable(() -> {
@@ -40,18 +43,7 @@ public class LocalStorageService implements StorageService {
 
     @Override
     public String retrieveImage(String key) {
-        try {
-            Path uploadDir = Paths.get("uploads");
-            if (!Files.exists(uploadDir)) {
-                Files.createDirectories(uploadDir);
-            }
-
-            Path targetFile = uploadDir.resolve(key);
-
-            return targetFile.toUri().toString();
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to find image in local storage", e);
-        }
+        return imageRetrievalConfig.getBaseUrl() + key.replace("\\", "/");
     }
 
     @Override

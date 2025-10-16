@@ -1,5 +1,7 @@
 package org.wildcloud.wildcloud_backend.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.buffer.DataBufferUtils;
@@ -20,6 +22,7 @@ import org.wildcloud.wildcloud_backend.service.ImageUploadService;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -33,9 +36,12 @@ public class UploadController {
     private final ImageUploadService uploadService;
     private final CameraService cameraService;
     private final WebClient webClient;
+    private final ObjectMapper objectMapper;
 
     @PostMapping("/direct")
-    public Mono<ResponseEntity<?>> directUpload(@RequestPart("metadata") UploadRequestDto request, @RequestPart("files") Flux<FilePart> files) {
+    public Mono<ResponseEntity<?>> directUpload(@RequestPart("request") String requestJson, @RequestPart("files") Flux<FilePart> files) throws JsonProcessingException {
+        UploadRequestDto request = objectMapper.readValue(requestJson, UploadRequestDto.class);
+        
         return files
                 .doOnNext(filePart -> log.info("Received FilePart: {}", filePart.filename()))
                 .flatMap(filePart -> DataBufferUtils.join(filePart.content())
@@ -56,11 +62,13 @@ public class UploadController {
                         .cameraId(request.getCameraId())
                         .build())
                 .flatMap(context -> uploadService.processUpload(SourceType.DIRECT, context))
-                .map(summary -> ResponseEntity.ok(Map.of(
-                        "message", "Upload finished",
-                        "successes", summary.getSuccesses(),
-                        "failures", summary.getFailures()
-                )));
+                .map(summary -> {
+                    Map<String, Object> response = new HashMap<>();
+                    response.put("message", "Upload finished");
+                    response.put("successes", summary.getSuccesses());
+                    response.put("failures", summary.getFailures());
+                    return ResponseEntity.ok(response);
+                });
     }
 
     @PostMapping("/mailparser-webhook")

@@ -32,8 +32,8 @@ public class AuthenticationFilter implements ServerSecurityContextRepository {
         if (path.contains("/api/AuthenticateUsers/login") || path.contains("/api/AuthenticateUsers/refreshToken") || path.contains("/api/AuthenticateUsers/createUser")) {
             return Mono.empty();
         }
+
         String authHeader = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
-        System.out.println("Auth Header: " + authHeader);
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);

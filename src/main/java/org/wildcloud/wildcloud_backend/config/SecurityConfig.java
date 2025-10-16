@@ -34,12 +34,10 @@ public class SecurityConfig {
                     config.setAllowCredentials(true);
                     return config;
                 }))
-
-                //.securityContextRepository(NoOpServerSecurityContextRepository.getInstance())
+                
                 .securityContextRepository(authenticationFilter)
-                //.addFilterAt(authenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION)
                 .authorizeExchange(exchanges -> exchanges
-                        .pathMatchers("/api/AuthenticateUsers/**").permitAll()
+                        .pathMatchers("/api/AuthenticateUsers/**", "/api/upload/mailparser-webhook").permitAll()
                         .anyExchange().authenticated()
                 )
                 .build();

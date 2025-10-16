@@ -95,6 +95,7 @@ public class UserServiceIMPL implements UserService {
         log.info("Service method loginUser called with email: {}", userLoginDTO.getUserEmail());
 
         return userValidation.userExistsByEmailValidation(userLoginDTO.getUserEmail())
+                .flatMap(u -> userValidation.credentialsValidation(u, userLoginDTO.getPassword()))
                 .map(this::buildUserDTO);
     }
 
