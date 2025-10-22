@@ -11,6 +11,10 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+    @ExceptionHandler(UploadException.class)
+    public ResponseEntity<Map<String, Object>> handleUploadFailed(UploadException ex) {
+        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
+    }
 
     @ExceptionHandler(EmailInvalidFormatException.class)
     public ResponseEntity<Map<String, Object>> handleEmailInvalidFormat(EmailInvalidFormatException ex) {
