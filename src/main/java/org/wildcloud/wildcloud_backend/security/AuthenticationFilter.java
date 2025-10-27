@@ -26,12 +26,6 @@ public class AuthenticationFilter implements ServerSecurityContextRepository {
     @Override
     public Mono<SecurityContext> load(ServerWebExchange exchange) {
         ServerHttpRequest request = exchange.getRequest();
-        String path = request.getPath().value();
-
-        // Skip authentication for specific endpoints
-        if (path.contains("/api/AuthenticateUsers/login") || path.contains("/api/AuthenticateUsers/refreshToken") || path.contains("/api/AuthenticateUsers/createUser")) {
-            return Mono.empty();
-        }
 
         String authHeader = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
 
@@ -48,15 +42,4 @@ public class AuthenticationFilter implements ServerSecurityContextRepository {
 
         return Mono.empty();
     }
-
-//    @Override
-//    public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
-//        return load(exchange)
-//                .flatMap(securityContext ->
-//                        chain.filter(exchange)
-//                                .contextWrite(ReactiveSecurityContextHolder.withSecurityContext(Mono.just(securityContext)))
-//                        )
-//
-//                .switchIfEmpty(chain.filter(exchange));
-//    }
 }
