@@ -205,6 +205,6 @@ mess up your relations.
 
 - **Security**: `JwtUtil.java`, `AuthenticationFilter.java`, `SecurityConfig.java`
 - **Controllers**: `AuthenticationController.java`, `UserController.java`, `CameraController.java`,
-  `RelationsController.java`
+  `RelationsController.java`, `ImageController.java`, `UploadController.java`
 - **Services**: Everything in `service/`
 - **Migrations**: `src/main/resources/db/migration/`
