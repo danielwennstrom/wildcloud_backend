@@ -74,7 +74,8 @@ CLOUDFLARE_R2_BUCKET_NAME=
 CLOUDFLARE_R2_ENDPOINT=
 CLOUDFLARE_R2_CUSTOM_DOMAIN=
 SERVER_PORT=8080
-JWT_SECRET=
+# example key, consider generating your own
+JWT_SECRET=v9y$B&E)H@MbQeThWmZq4t7w!z%C*F-JaNdRfUjXn2r5u8x/A?D(G+KbPeShVkYp
 ```
 
 **Note**: Flyway uses JDBC at startup (make sure the JDBC driver is in `pom.xml`), but the app uses R2DBC at runtime.
